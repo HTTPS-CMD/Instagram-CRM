@@ -1,0 +1,57 @@
+/* src/index.css */
+body {
+  margin: 0;
+  padding: 0;
+  direction: rtl !important; /* ✅ این تنها چیزی است که نیاز داریم */
+}
+
+/* --- ✅ استایل‌های سکسی نهایی تقویم جلالی --- */
+/* (این بخش‌ها می‌توانند بمانند چون مربوط به کامپوننت تقویم هستند) */
+.MuiInputLabel-root {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+.MuiInputBase-root {
+    background-color: rgba(255, 255, 255, 0.09) !important;
+    border-radius: 8px !important;
+}
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #90caf9 !important;
+    box-shadow: 0 0 5px #90caf9;
+}
+.MuiTextField-root {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+.MuiTextField-root:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* --- ❌❌❌ تمام هک‌های .MuiListItemText-root و .MuiTypography در اینجا حذف شدند --- */
+/* چون در فایل main.jsx به صورت اصولی پیاده‌سازی شدند */
+
+
+/* اصلاح تقویم برای راست‌چین بودن واقعی */
+.fc {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+.fc-header-toolbar {
+  direction: rtl !important;
+}
+
+.fc-day-header {
+  text-align: right !important;
+}
+
+/* مهم: این بخش ترتیب سلول‌ها را درست می‌کند */
+.fc .fc-scrollgrid-sync-table,
+.fc .fc-daygrid-body,
+.fc .fc-daygrid-body table {
+    direction: rtl !important;
+}
+
+/* تنظیم فونت برای تقویم */
+.fc-toolbar-title, .fc-col-header-cell-cushion, .fc-daygrid-day-number {
+    font-family: 'Tahoma', 'Arial', sans-serif !important;
+}

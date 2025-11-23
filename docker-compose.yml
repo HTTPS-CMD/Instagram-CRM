@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./Backend
+    container_name: content_erp_backend
+    volumes:
+      - ./Backend/db.sqlite3:/app/db.sqlite3 # دیتابیس پاک نشود
+      - ./Backend/media:/app/media           # فایل‌های آپلودی پاک نشوند
+    expose:
+      - "8000"
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: content_erp_frontend
+    ports:
+      - "80:80" # پورت ۸۰ سرور را به کانتینر وصل می‌کند
+    depends_on:
+      - backend
+    restart: always

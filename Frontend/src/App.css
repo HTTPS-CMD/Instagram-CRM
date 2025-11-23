@@ -1,0 +1,9 @@
+/* src/App.css */
+/* ما کدهای text-align: center و max-width: 1280px را پاک کردیم
+  تا اپلیکیشن ما بتواند تمام عرض صفحه را بگیرد.
+*/
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
