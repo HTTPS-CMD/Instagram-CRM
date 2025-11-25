@@ -22,6 +22,7 @@ import MediaManagement from "./MediaManagement";
 import CalendarEventForm from "./CalendarEventForm";
 import FinancialManagement from "./FinancialManagement";
 import ScenarioKanban from "./ScenarioKanban";
+import AIAnalysisTab from "./AIAnalysisTab";
 
 import moment from 'jalali-moment';
 import { UserContext } from "../App";
@@ -258,7 +259,7 @@ function ProjectDetailPage() {
           { id: 'calendar', label: "تقویم محتوایی", icon: <CalendarMonthIcon />, show: isInsta },
           { id: 'scenarios', label: "سناریوها", icon: <DescriptionIcon />, show: true },
           { id: 'reports', label: "گزارش کار", icon: <ReportIcon />, show: isInsta },
-          { id: 'analysis', label: "تحلیل ماهانه", icon: <AIIcon />, show: isInsta, disabled: true },
+          { id: 'analysis', label: "تحلیل ماهانه", icon: <AIIcon />, show: isInsta }, // ✅ فعال شد
           { id: 'media', label: "مدیریت فایل", icon: <PermMediaIcon />, show: true },
           // --- 👇 تغییر این خط 👇 ---
           { id: 'financials', label: "امور مالی", icon: <AttachMoneyIcon />, show: isInsta }, // فقط اینستاگرام
@@ -457,7 +458,7 @@ function ProjectDetailPage() {
 
       {visibleTabs[currentTab]?.id === 'analysis' && (
           <TabPanel value={currentTab} index={currentTab}>
-              {/* محتوای غیرفعال هوش مصنوعی */}
+             <AIAnalysisTab projectId={projectId} /> {/* محتوای غیرفعال هوش مصنوعی */}
           </TabPanel>
       )}
 

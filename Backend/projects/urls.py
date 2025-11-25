@@ -28,4 +28,5 @@ urlpatterns = [
     path('', include(projects_router.urls)),
     path('dashboard-stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
     path('projects/<int:project_pk>/export-financials/', ProjectFinancialExportView.as_view(), name='export-financials'),
+    path('projects/<int:project_pk>/ai-analysis/', ProjectAIAnalysisView.as_view(), name='ai-analysis'),
 ]

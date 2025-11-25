@@ -1,0 +1,5 @@
+Backend/db.sqlite3
+Frontend/node_modules/
+Frontend/dist/
+__pycache__/
+*.pyc

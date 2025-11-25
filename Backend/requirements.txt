@@ -1,0 +1,11 @@
+Django>=5.0
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+drf-nested-routers
+Pillow
+gunicorn
+whitenoise
+psycopg2-binary
+openpyxl
+google-generativeai

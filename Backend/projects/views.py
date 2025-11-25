@@ -1,11 +1,13 @@
 # backend/projects/views.py
 import openpyxl
+import google.generativeai as genai
 from django.http import HttpResponse
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Sum, Q
+import time
 
 # ایمپورت مدل‌ها
 from .models import (
@@ -482,3 +484,63 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
         from django.utils import timezone
         room.updated_at = timezone.now()
         room.save()
+
+
+# ✅ کلاس تحلیل هوشمند (نسخه مقاوم در برابر خطا)
+class ProjectAIAnalysisView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, project_pk):
+        try:
+            # 1. پیدا کردن پروژه
+            try:
+                project = Project.objects.get(pk=project_pk)
+            except Project.DoesNotExist:
+                return Response({"error": "پروژه یافت نشد."}, status=404)
+
+            # 2. بررسی گزارش‌ها
+            reports = WeeklyReport.objects.filter(project=project).order_by('week_number')
+            if not reports.exists():
+                return Response({"analysis": "هنوز هیچ گزارش هفتگی ثبت نشده است. لطفاً ابتدا گزارش‌ها را وارد کنید."},
+                                status=200)
+
+            # 3. تلاش برای استفاده از هوش مصنوعی
+            try:
+                import google.generativeai as genai
+
+                # کلید را اینجا بگذارید
+                GOOGLE_API_KEY = "AIzaSyCZEdRVSlYnbwx7ZOox6kVDI2UmZfWaATQ"
+
+                if not GOOGLE_API_KEY or GOOGLE_API_KEY == "AIzaSyCZEdRVSlYnbwx7ZOox6kVDI2UmZfWaATQ":
+                    raise ValueError("API Key is missing")
+
+                genai.configure(api_key=GOOGLE_API_KEY)
+
+                # ساخت پرامپت
+                prompt = f"تحلیل پروژه {project.project_name} با هدف {project.monthly_post_goal} پست:\n"
+                for r in reports:
+                    prompt += f"- هفته {r.week_number}: {r.report_text}\n"
+
+                prompt += "\nلطفاً نقاط قوت، ضعف و پیشنهاد استراتژیک ماه بعد را خلاصه بگو."
+
+                model = genai.GenerativeModel('gemini-pro')
+                response = model.generate_content(prompt)
+
+                return Response({"analysis": response.text})
+
+            except ImportError:
+                print("Error: google-generativeai package is not installed.")
+                return Response(
+                    {"analysis": "⚠️ کتابخانه هوش مصنوعی نصب نیست. لطفاً پکیج google-generativeai را نصب کنید."},
+                    status=200)
+
+            except Exception as ai_error:
+                print(f"AI Error: {ai_error}")
+                # در صورت خرابی AI، پیام دوستانه بفرست نه ارور 500
+                return Response(
+                    {"analysis": f"متاسفانه هوش مصنوعی در دسترس نیست ({str(ai_error)}). لطفاً بعداً تلاش کنید."},
+                    status=200)
+
+        except Exception as e:
+            print(f"Server Error: {e}")
+            return Response({"error": "خطای غیرمنتظره در سرور."}, status=500)

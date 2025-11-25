@@ -4,8 +4,8 @@ import axios from 'axios';
 // ✅ تنظیم هوشمند آدرس API
 // اگر در محیط توسعه (npm run dev) هستید، به لوکال‌هاست وصل می‌شود.
 // اگر بیلد شده و روی سرور است، به همان دامنه‌ای که سایت روی آن باز است وصل می‌شود.
-// const API_URL = import.meta.env.DEV ? '' : '';
-// نکته: اگر روی سرور داکر هستید و مشکل اتصال دارید، http://127.0.0.1:8000خط بالا را کامنت کنید و خط زیر را با IP سرور فعال کنید:
+const API_URL = import.meta.env.DEV ? 'http://127.0.0.1:8000' : '';
+// نکته: اگر روی سرور داکر هستید و مشکل اتصال دارید، خط بالا را کامنت کنید و خط زیر را با IP سرور فعال کنید:
 // const API_URL = 'http://104.234.196.110:8000';
 
 const apiClient = axios.create({
@@ -172,6 +172,10 @@ export const sendChatMessage = (formData) => {
   return apiClient.post('/api/v1/chat-messages/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
   });
+};
+
+export const analyzeProjectAI = (projectId) => {
+  return apiClient.post(`/api/v1/projects/${projectId}/ai-analysis/`);
 };
 
 
