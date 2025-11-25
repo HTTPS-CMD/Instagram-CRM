@@ -113,7 +113,7 @@ function MediaManagement({ project }) {
     return (
         <Box>
             {/* --- بخش ۱: هویت بصری (ثابت) --- */}
-            <Typography variant="h6" gutterBottom sx={{ mt: 2, color: 'primary.main' }}>
+            <Typography variant="h6" gutterBottom sx={{ mt: 2, color: 'primary.main', marginLeft: '15px',marginBottom:'20px', textAlign:'left' }}>
                 هویت بصری (ثابت)
             </Typography>
             <Grid container spacing={3} mb={4}>
@@ -164,6 +164,7 @@ function MediaManagement({ project }) {
                     color="secondary"
                     startIcon={<AddIcon />}
                     onClick={() => setOpenUploadModal(true)}
+                    sx={{ marginRight:'15px', }}
                 >
                     آپلود فایل جدید
                 </Button>

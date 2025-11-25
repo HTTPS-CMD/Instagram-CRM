@@ -1,9 +1,9 @@
-// frontend/src/components/MainLayout.jsx
+// src/components/MainLayout.jsx
 import React, { useContext, useState, useEffect } from "react";
 import {
   Box, Drawer, AppBar, Toolbar, Typography, List,
   ListItem, ListItemButton, ListItemIcon, ListItemText, Divider,
-  IconButton, Badge, Menu, MenuItem, Chip
+  IconButton, Badge, Menu, MenuItem, Chip, Stack // ✅ Stack اضافه شد
 } from "@mui/material";
 import {
   Home as HomeIcon,
@@ -18,9 +18,11 @@ import {
   CalendarMonth as CalendarIcon,
   AccountCircle as ProfileIcon,
   SupportAgent as SupportIcon,
-  History as HistoryIcon // ✅ آیکون جدید برای لاگ‌ها
+  History as HistoryIcon,
+  Chat as ChatIcon,
+  Dashboard as DashboardIcon // ✅ آیکون داشبورد
 } from "@mui/icons-material";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // ✅ useLocation اضافه شد
 import { UserContext } from "../App";
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from "../api";
 import moment from 'jalali-moment';
@@ -29,11 +31,27 @@ const drawerWidth = 240;
 
 function MainLayout({ children }) {
   const navigate = useNavigate();
+  const location = useLocation(); // برای تشخیص صفحه فعلی
   const { user, setUser } = useContext(UserContext);
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
+
+  // تعیین عنوان صفحه بر اساس آدرس
+  const getPageTitle = () => {
+      switch(location.pathname) {
+          case '/dashboard': return 'داشبورد مدیریت';
+          case '/calendar': return 'تقویم کاری جامع';
+          case '/users': return 'مدیریت مشتریان';
+          case '/personnel': return 'مدیریت پرسنل';
+          case '/financials': return 'امور مالی آژانس';
+          case '/chat': return 'مرکز گفتگو';
+          case '/logs': return 'گزارش فعالیت‌ها';
+          case '/profile': return 'پروفایل کاربری';
+          default: return 'پنل مدیریت محتوا';
+      }
+  };
 
   useEffect(() => {
       if (user) {
@@ -99,16 +117,23 @@ function MainLayout({ children }) {
         sx={{
           width: `calc(100% - ${drawerWidth}px)`,
           ml: `${drawerWidth}px`,
+          bgcolor: 'background.paper', // رنگ زمینه سفید/تیره بسته به تم
+          color: 'text.primary', // رنگ متن
+          boxShadow: 1
         }}
       >
         <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, textAlign: "left", direction: "rtl" }}>
-            پنل مدیریت محتوا
-          </Typography>
+          {/* ✅ عنوان صفحه در نوار بالا (راست‌چین) */}
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flexGrow: 1 }}>
+              <DashboardIcon color="primary" />
+              <Typography variant="h6" noWrap component="div" fontWeight="bold">
+                {getPageTitle()}
+              </Typography>
+          </Stack>
 
           <IconButton color="inherit" onClick={handleNotificationClick}>
               <Badge badgeContent={unreadCount} color="error">
-                  <NotificationsIcon />
+                  <NotificationsIcon color="action" />
               </Badge>
           </IconButton>
 
@@ -183,74 +208,58 @@ function MainLayout({ children }) {
         variant="permanent"
         anchor="left"
       >
-        <Toolbar />
+        <Toolbar>
+            <Typography variant="h6" color="primary" fontWeight="bold" sx={{width:'100%', textAlign:'center'}}>
+                پنل مدیریت محتوا
+            </Typography>
+        </Toolbar>
+        <Divider />
         <Box sx={{ overflow: "auto" }}>
           <List>
             <ListItem disablePadding>
-              <ListItemButton onClick={() => navigate('/dashboard')}>
-                <ListItemIcon>
-                  <HomeIcon />
-                </ListItemIcon>
+              <ListItemButton onClick={() => navigate('/dashboard')} selected={location.pathname === '/dashboard'}>
+                <ListItemIcon><HomeIcon /></ListItemIcon>
                 <ListItemText primary="داشبورد" />
               </ListItemButton>
             </ListItem>
 
             <ListItem disablePadding>
-                <ListItemButton onClick={() => navigate('/calendar')}>
-                  <ListItemIcon>
-                      <CalendarIcon />
-                  </ListItemIcon>
+                <ListItemButton onClick={() => navigate('/calendar')} selected={location.pathname === '/calendar'}>
+                  <ListItemIcon><CalendarIcon /></ListItemIcon>
                     <ListItemText primary="تقویم کاری" />
                 </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding>
-              <ListItemButton onClick={() => navigate('/dashboard')}>
-                <ListItemIcon>
-                  <FolderIcon />
-                </ListItemIcon>
-                <ListItemText primary="پروژه‌ها" />
-              </ListItemButton>
             </ListItem>
 
             {/* منوی مخصوص ادمین */}
             {user && user.role === 'admin' && (
                 <>
                     <Divider sx={{ my: 1 }} />
+                    <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block', textAlign:'center' }}>مدیریت</Typography>
 
                     <ListItem disablePadding>
-                        <ListItemButton onClick={() => navigate('/users')}>
-                            <ListItemIcon>
-                                <PeopleIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="مدیریت مشتریان" />
+                        <ListItemButton onClick={() => navigate('/users')} selected={location.pathname === '/users'}>
+                            <ListItemIcon><PeopleIcon /></ListItemIcon>
+                            <ListItemText primary="مشتریان" />
                         </ListItemButton>
                     </ListItem>
 
                     <ListItem disablePadding>
-                        <ListItemButton onClick={() => navigate('/personnel')}>
-                            <ListItemIcon>
-                                <AdminIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="مدیریت پرسنل" />
+                        <ListItemButton onClick={() => navigate('/personnel')} selected={location.pathname === '/personnel'}>
+                            <ListItemIcon><AdminIcon /></ListItemIcon>
+                            <ListItemText primary="پرسنل" />
                         </ListItemButton>
                     </ListItem>
 
                     <ListItem disablePadding>
-                        <ListItemButton onClick={() => navigate('/financials')}>
-                            <ListItemIcon>
-                                <FinancialIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="امور مالی آژانس" />
+                        <ListItemButton onClick={() => navigate('/financials')} selected={location.pathname === '/financials'}>
+                            <ListItemIcon><FinancialIcon /></ListItemIcon>
+                            <ListItemText primary="امور مالی" />
                         </ListItemButton>
                     </ListItem>
 
-                    {/* ✅ دکمه جدید: گزارش فعالیت‌ها */}
                     <ListItem disablePadding>
-                        <ListItemButton onClick={() => navigate('/logs')}>
-                            <ListItemIcon>
-                                <HistoryIcon />
-                            </ListItemIcon>
+                        <ListItemButton onClick={() => navigate('/logs')} selected={location.pathname === '/logs'}>
+                            <ListItemIcon><HistoryIcon /></ListItemIcon>
                             <ListItemText primary="گزارش فعالیت‌ها" />
                         </ListItemButton>
                     </ListItem>
@@ -259,28 +268,25 @@ function MainLayout({ children }) {
                 </>
             )}
 
+            <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block', textAlign:'center' }}>کاربری</Typography>
             <ListItem disablePadding>
-              <ListItemButton onClick={() => navigate('/profile')}>
-                <ListItemIcon>
-                  <ProfileIcon />
-                </ListItemIcon>
+              <ListItemButton onClick={() => navigate('/profile')} selected={location.pathname === '/profile'}>
+                <ListItemIcon><ProfileIcon /></ListItemIcon>
                 <ListItemText primary="پروفایل من" />
               </ListItemButton>
             </ListItem>
 
              <ListItem disablePadding>
-                <ListItemButton onClick={() => navigate('/support')}>
-                    <ListItemIcon><SupportIcon /></ListItemIcon>
-                        <ListItemText primary="پشتیبانی" />
+                <ListItemButton onClick={() => navigate('/chat')} selected={location.pathname === '/chat'}>
+                    <ListItemIcon><ChatIcon /></ListItemIcon>
+                        <ListItemText primary="مرکز گفتگو" />
                 </ListItemButton>
              </ListItem>
 
             <ListItem disablePadding>
               <ListItemButton onClick={handleLogout}>
-                <ListItemIcon>
-                  <ExitToAppIcon />
-                </ListItemIcon>
-                <ListItemText primary="خروج" />
+                <ListItemIcon><ExitToAppIcon color="error" /></ListItemIcon>
+                <ListItemText primary="خروج" sx={{color: 'error.main'}} />
               </ListItemButton>
             </ListItem>
           </List>

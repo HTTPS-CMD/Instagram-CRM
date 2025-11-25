@@ -1,7 +1,14 @@
 // src/components/GlobalCalendarPage.jsx
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, CircularProgress, Chip, Stack } from '@mui/material';
-import { CalendarMonth as CalendarIcon, Circle as CircleIcon } from '@mui/icons-material';
+import { Box, Typography, Paper, CircularProgress, Chip, Stack, alpha, useTheme } from '@mui/material';
+import {
+    CalendarMonth as CalendarIcon,
+    Videocam as FilmingIcon,
+    PostAdd as PostIcon,
+    Groups as MeetingIcon,
+    ChevronLeft as LeftIcon,
+    ChevronRight as RightIcon
+} from '@mui/icons-material';
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -10,12 +17,12 @@ import momentPlugin from "@fullcalendar/moment";
 import 'moment/locale/fa';
 import { getAllCalendarEvents } from '../api';
 import { useNavigate } from 'react-router-dom';
-import moment from 'jalali-moment';
 
 function GlobalCalendarPage() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const theme = useTheme();
 
     useEffect(() => {
         fetchEvents();
@@ -24,16 +31,33 @@ function GlobalCalendarPage() {
     const fetchEvents = async () => {
         try {
             const response = await getAllCalendarEvents();
-            const formattedEvents = response.data.map(event => ({
-                id: event.id,
-                title: `${event.project_name}: ${event.title}`, // ترکیب نام پروژه و عنوان
-                start: event.event_date,
-                color: event.event_type === 'filming' ? '#ff9800' : '#2196f3', // نارنجی برای آفیش، آبی برای پست
-                extendedProps: {
-                    projectId: event.project,
-                    type: event.event_type
+            const formattedEvents = response.data.map(event => {
+                let color = theme.palette.info.main;
+                let icon = 'post';
+
+                if (event.event_type === 'filming') {
+                    color = theme.palette.warning.main;
+                    icon = 'film';
+                } else if (event.event_type === 'meeting') {
+                    color = theme.palette.secondary.main;
+                    icon = 'meet';
                 }
-            }));
+
+                return {
+                    id: event.id,
+                    title: `${event.project_name}: ${event.title}`,
+                    start: event.event_date,
+                    backgroundColor: alpha(color, 0.2), // پس‌زمینه شفاف
+                    borderColor: color,
+                    textColor: color, // متن رنگی
+                    extendedProps: {
+                        projectId: event.project,
+                        type: event.event_type,
+                        icon: icon
+                    },
+                    classNames: ['modern-event'] // کلاس سفارشی برای استایل
+                };
+            });
             setEvents(formattedEvents);
         } catch (error) {
             console.error("Error fetching events:", error);
@@ -49,31 +73,81 @@ function GlobalCalendarPage() {
         }
     };
 
+    // رندر سفارشی برای محتوای رویداد (اضافه کردن آیکون)
+    const renderEventContent = (eventInfo) => {
+        const type = eventInfo.event.extendedProps.type;
+        let Icon = PostIcon;
+        if (type === 'filming') Icon = FilmingIcon;
+        if (type === 'meeting') Icon = MeetingIcon;
+
+        return (
+            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ px: 0.5, py: 0.2, overflow: 'hidden' }}>
+                <Icon sx={{ fontSize: 14, opacity: 0.8 }} />
+                <Typography variant="caption" noWrap fontWeight="bold">
+                    {eventInfo.event.title}
+                </Typography>
+            </Stack>
+        );
+    };
+
     if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
 
     return (
         <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h4" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CalendarIcon fontSize="large" color="primary"/> تقویم کاری جامع
+            {/* هدر صفحه */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 3, mb: 3, borderRadius: 4,
+                    background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+                    color: 'white',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+                }}
+            >
+                <Typography variant="h4" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <CalendarIcon fontSize="large" /> تقویم کاری جامع
                 </Typography>
 
-                {/* راهنما */}
-                <Stack direction="row" spacing={2}>
-                    <Chip icon={<CircleIcon sx={{color:'#ff9800 !important'}}/>} label="آفیش فیلمبرداری" variant="outlined" />
-                    <Chip icon={<CircleIcon sx={{color:'#2196f3 !important'}}/>} label="انتشار پست" variant="outlined" />
+                <Stack direction="row" spacing={1}>
+                    <Chip
+                        icon={<FilmingIcon sx={{color: '#ff9800 !important'}}/>}
+                        label="آفیش"
+                        sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white', backdropFilter: 'blur(10px)' }}
+                    />
+                    <Chip
+                        icon={<MeetingIcon sx={{color: '#ce93d8 !important'}}/>}
+                        label="جلسه"
+                        sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white', backdropFilter: 'blur(10px)' }}
+                    />
+                    <Chip
+                        icon={<PostIcon sx={{color: '#90caf9 !important'}}/>}
+                        label="پست"
+                        sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white', backdropFilter: 'blur(10px)' }}
+                    />
                 </Stack>
-            </Stack>
+            </Paper>
 
-            <Paper elevation={3} sx={{ p: 3, borderRadius: 3, direction: 'ltr' }}>
+            {/* بدنه تقویم */}
+            <Paper
+                elevation={3}
+                sx={{
+                    p: 2,
+                    borderRadius: 4,
+                    direction: 'ltr', // ساختار داخلی LTR برای تقویم
+                    bgcolor: 'background.paper',
+                    '& .fc': { fontFamily: 'inherit' }, // ارث‌بری فونت فارسی
+                }}
+            >
                 <FullCalendar
                     plugins={[dayGridPlugin, timeGridPlugin, listPlugin, momentPlugin]}
                     initialView="dayGridMonth"
                     headerToolbar={{
-                        start: 'title',
-                        center: 'dayGridMonth,timeGridWeek,listWeek', // دکمه‌های تغییر نما
-                        end: 'today prev,next'
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,listWeek'
                     }}
+
                     buttonText={{
                         today: 'امروز',
                         month: 'ماهانه',
@@ -87,7 +161,8 @@ function GlobalCalendarPage() {
                     height="auto"
                     contentHeight="auto"
                     dayHeaderClassNames="calendar-header-rtl"
-                    eventClick={handleEventClick} // کلیک روی رویداد -> رفتن به پروژه
+                    eventClick={handleEventClick}
+                    eventContent={renderEventContent} // ✅ استفاده از رندر سفارشی
                     eventTimeFormat={{
                         hour: '2-digit',
                         minute: '2-digit',

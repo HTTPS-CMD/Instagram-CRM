@@ -11,7 +11,8 @@ from django.db.models import Sum, Q
 from .models import (
     Project, Scenario, CalendarEvent, WeeklyReport,
     ProjectFile, ProjectPayment, ProjectExpense, Notification,
-    SalaryPayment, GeneralExpense, ScenarioComment,Ticket, TicketMessage, ActivityLog
+    SalaryPayment, GeneralExpense, ScenarioComment, ActivityLog,
+    ChatRoom, ChatMessage
 )
 
 # ایمپورت سریالایزرها
@@ -20,7 +21,8 @@ from .serializers import (
     ScenarioSerializer, CalendarEventSerializer, WeeklyReportSerializer,
     ProjectFileSerializer, ProjectPaymentSerializer, ProjectExpenseSerializer,
     NotificationSerializer, SalaryPaymentSerializer, GeneralExpenseSerializer,
-    ScenarioCommentSerializer,TicketSerializer, TicketMessageSerializer, ActivityLogSerializer
+    ScenarioCommentSerializer, ActivityLogSerializer,
+    ChatRoomSerializer, ChatMessageSerializer
 )
 
 
@@ -413,48 +415,6 @@ class GlobalCalendarEventViewSet(viewsets.ReadOnlyModelViewSet):
         ).distinct().order_by('event_date')
 
 
-# ✅ ViewSet تیکت‌ها
-class TicketViewSet(viewsets.ModelViewSet):
-    serializer_class = TicketSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        if user.role == 'admin' or user.is_superuser:
-            return Ticket.objects.all().order_by('-updated_at')
-        # بقیه کاربران فقط تیکت خودشان را می‌بینند
-        return Ticket.objects.filter(user=user).order_by('-updated_at')
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-
-# ✅ ViewSet پیام‌های تیکت
-class TicketMessageViewSet(viewsets.ModelViewSet):
-    serializer_class = TicketMessageSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        ticket_id = self.request.query_params.get('ticket')
-        if ticket_id:
-            return TicketMessage.objects.filter(ticket_id=ticket_id).order_by('created_at')
-        return TicketMessage.objects.none()
-
-    def perform_create(self, serializer):
-        ticket_id = self.request.data.get('ticket')
-
-        # ✅✅✅ تغییر مهم: دریافت آبجکت تیکت و پاس دادن به save
-        from django.shortcuts import get_object_or_404
-        ticket = get_object_or_404(Ticket, id=ticket_id)
-
-        # تیکت را اینجا به صورت دستی ست می‌کنیم تا مشکل حل شود
-        serializer.save(sender=self.request.user, ticket=ticket)
-
-        # آپدیت زمان بروزرسانی تیکت
-        from django.utils import timezone
-        ticket.updated_at = timezone.now()
-        ticket.save()
-
 
 # ✅ تابع کمکی برای ثبت لاگ (این را در Viewهای دیگر صدا می‌زنیم)
 def log_activity(user, action, model, desc, project=None, request=None):
@@ -483,3 +443,42 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return ActivityLog.objects.all().order_by('-created_at')
+
+
+
+# ✅ ViewSet اتاق‌های چت
+class ChatRoomViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ChatRoomSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # کاربر فقط اتاق‌هایی را می‌بیند که در آن‌ها عضو است
+        return self.request.user.chat_rooms.all().order_by('-updated_at')
+
+
+# ✅ ViewSet پیام‌های چت
+class ChatMessageViewSet(viewsets.ModelViewSet):
+    serializer_class = ChatMessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        room_id = self.request.query_params.get('room')
+        if room_id:
+            if self.request.user.chat_rooms.filter(id=room_id).exists():
+                return ChatMessage.objects.filter(room_id=room_id).order_by('created_at')
+        return ChatMessage.objects.none()
+
+    def perform_create(self, serializer):
+        room_id = self.request.data.get('room')
+        from django.shortcuts import get_object_or_404
+        room = get_object_or_404(ChatRoom, id=room_id)
+
+        if self.request.user not in room.participants.all():
+            raise permissions.PermissionDenied("شما عضو این گفتگو نیستید.")
+
+        serializer.save(sender=self.request.user, room=room)
+
+        # آپدیت زمان اتاق
+        from django.utils import timezone
+        room.updated_at = timezone.now()
+        room.save()

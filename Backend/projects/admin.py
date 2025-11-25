@@ -1,11 +1,6 @@
 # backend/projects/admin.py
 from django.contrib import admin
-from .models import (
-    Project, Scenario, CalendarEvent, WeeklyReport,
-    ProjectFile, ProjectPayment, ProjectExpense, Notification,
-    SalaryPayment, GeneralExpense, ScenarioComment,Ticket,TicketMessage # ✅ اضافه شد
-    ,ActivityLog
-)
+from .models import *
 
 # تنظیمات نمایش پروژه در پنل ادمین
 class ProjectAdmin(admin.ModelAdmin):
@@ -13,7 +8,7 @@ class ProjectAdmin(admin.ModelAdmin):
     list_filter = ('is_started', 'selected_package', 'payment_method')
     search_fields = ('project_name', 'client_user__username')
 
-admin.site.register(Project, ProjectAdmin)
+admin.site.register(Project)
 admin.site.register(Scenario)
 admin.site.register(CalendarEvent)
 admin.site.register(WeeklyReport)
@@ -23,7 +18,7 @@ admin.site.register(ProjectExpense)
 admin.site.register(Notification)
 admin.site.register(SalaryPayment)
 admin.site.register(GeneralExpense)
-admin.site.register(ScenarioComment) # ✅ حالا بدون ارور کار می‌کند
-admin.site.register(Ticket)
-admin.site.register(TicketMessage)
+admin.site.register(ScenarioComment)
+admin.site.register(ChatRoom)
+admin.site.register(ChatMessage)
 admin.site.register(ActivityLog)

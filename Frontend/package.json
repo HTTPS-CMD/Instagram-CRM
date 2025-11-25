@@ -24,6 +24,7 @@
     "@mui/material": "^7.3.5",
     "@mui/x-date-pickers": "^8.18.0",
     "axios": "^1.13.2",
+    "emoji-picker-react": "^4.15.2",
     "framer-motion": "^12.23.24",
     "jalali-moment": "^3.3.11",
     "jwt-decode": "^4.0.0",

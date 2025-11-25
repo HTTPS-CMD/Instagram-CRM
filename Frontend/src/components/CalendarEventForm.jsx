@@ -23,6 +23,7 @@ function CalendarEventForm({ projectId, onEventCreated, onCancel }) {
     const EVENT_TYPES = [
         { value: 'post', label: 'آپلود پست/ریلز' },
         { value: 'filming', label: 'آفیش فیلمبرداری' },
+        { value: 'meeting', label: 'جلسه (حضوری/آنلاین)' },
     ];
 
     const handleChange = (e) => {

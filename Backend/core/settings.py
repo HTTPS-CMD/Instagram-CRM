@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-+3nnd*ge_853xo#3=wpx-14ss@(qn72)q(v(p+kps6gvwpep%k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*']
 
 
 # Application definition
@@ -62,11 +62,11 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    True
-    # "http://localhost:3000",  # این برای create-react-app بود
-    # "http://127.0.0.1:3000",
-    # "http://localhost:5173",  # <-- این خط را برای Vite اضافه کنید
-    # "http://127.0.0.1:5173", # <-- این خط را هم اضافه کنید
+    # True
+    "http://localhost:3000",  # این برای create-react-app بود
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",  # <-- این خط را برای Vite اضافه کنید
+    "http://127.0.0.1:5173", # <-- این خط را هم اضافه کنید
 ]
 
 # مهم: چون می‌خواهیم نقش (Role) به کاربر اضافه کنیم، باید
@@ -180,8 +180,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles' # ✅ این خط خیلی مهم است
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage' # ✅ فشرده‌سازی فایل‌ها
+# STATIC_ROOT = BASE_DIR / 'staticfiles' # ✅ این خط خیلی مهم است
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage' # ✅ فشرده‌سازی فایل‌ها
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -1,13 +1,18 @@
 // src/api.js
 import axios from 'axios';
 
-const API_URL = '';
+// ✅ تنظیم هوشمند آدرس API
+// اگر در محیط توسعه (npm run dev) هستید، به لوکال‌هاست وصل می‌شود.
+// اگر بیلد شده و روی سرور است، به همان دامنه‌ای که سایت روی آن باز است وصل می‌شود.
+const API_URL = import.meta.env.DEV ? 'http://127.0.0.1:8000' : '';
+// نکته: اگر روی سرور داکر هستید و مشکل اتصال دارید، خط بالا را کامنت کنید و خط زیر را با IP سرور فعال کنید:
+// const API_URL = 'http://104.234.196.110:8000';
 
 const apiClient = axios.create({
   baseURL: API_URL,
 });
 
-// ۱. اینترسپتور درخواست: توکن را به هدر تمام درخواست‌ها می‌چسباند
+// ۱. اینترسپتور درخواست: افزودن توکن به هدر
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -21,42 +26,43 @@ apiClient.interceptors.request.use(
   }
 );
 
-// ۲. ✅✅✅ اینترسپتور پاسخ: مدیریت هوشمند تمدید توکن (Refresh Token)
+// ۲. اینترسپتور پاسخ: مدیریت تمدید توکن (Refresh Token)
 apiClient.interceptors.response.use(
   (response) => {
-    return response; // اگر پاسخ موفق بود، کاری نکن
+    return response;
   },
   async (error) => {
     const originalRequest = error.config;
 
-    // اگر خطای 401 (عدم دسترسی) گرفتیم و این اولین تلاش ماست (لوپ بی‌نهایت نشود)
+    // اگر خطای 401 (عدم دسترسی) گرفتیم و قبلاً تلاش نکرده‌ایم
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (!refreshToken) {
-            // اگر رفرش توکن هم نبود، یعنی کاربر کلا لاگ‌اوت شده
-            throw new Error("No refresh token");
+            throw new Error("No refresh token available");
         }
 
-        // درخواست به سرور برای دریافت اکسس توکن جدید
-        const response = await axios.post(`${API_URL}/api/v1/token/refresh/`, {
+        // تلاش برای دریافت توکن جدید
+        // نکته: برای رفرش حتما باید آدرس کامل باشد اگر API_URL خالی است
+        const baseURL = API_URL || window.location.origin;
+        const response = await axios.post(`${baseURL}/api/v1/token/refresh/`, {
           refresh: refreshToken
         });
 
         const { access } = response.data;
 
-        // ذخیره توکن جدید در مرورگر
+        // ذخیره توکن جدید
         localStorage.setItem('access_token', access);
 
-        // آپدیت کردن درخواست قبلی با توکن جدید و ارسال مجدد آن
+        // تلاش مجدد درخواست قبلی با توکن جدید
         originalRequest.headers['Authorization'] = `Bearer ${access}`;
         return apiClient(originalRequest);
 
       } catch (refreshError) {
-        // اگر تمدید توکن هم شکست خورد (یعنی خیلی وقته لاگین نکردید)، کاربر رو بنداز بیرون
-        console.error("Session expired:", refreshError);
+        console.error("Session expired or refresh failed:", refreshError);
+        // پاک کردن توکن‌ها و هدایت به لاگین
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         window.location.href = '/login';
@@ -64,263 +70,109 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // اگر خطای دیگری بود، آن را به برنامه برگردان
     return Promise.reject(error);
   }
 );
 
-// --- توابع API ---
+// --- توابع احراز هویت ---
+export const loginUser = (username, password) => apiClient.post('/api/v1/token/', { username, password });
 
-export const loginUser = (username, password) => {
-  return apiClient.post('/api/v1/token/', {
-    username: username,
-    password: password
-  });
+// --- مدیریت پروژه‌ها ---
+export const getProjects = () => apiClient.get('/api/v1/projects/');
+export const getProjectDetails = (id) => apiClient.get(`/api/v1/projects/${id}/`);
+export const createProject = (data) => apiClient.post('/api/v1/projects/', data);
+export const updateProject = (id, data) => apiClient.patch(`/api/v1/projects/${id}/`, data);
+export const deleteProject = (id) => apiClient.delete(`/api/v1/projects/${id}/`);
+
+// --- مدیریت سناریوها ---
+export const getScenarios = (id) => apiClient.get(`/api/v1/projects/${id}/scenarios/`);
+export const createScenario = (id, data) => apiClient.post(`/api/v1/projects/${id}/scenarios/`, data);
+export const updateScenario = (sId, data, pId) => apiClient.patch(`/api/v1/projects/${pId}/scenarios/${sId}/`, data);
+export const deleteScenario = (sId, pId) => apiClient.delete(`/api/v1/projects/${pId}/scenarios/${sId}/`);
+
+// --- تقویم و رویدادها ---
+export const getCalendarEvents = (id) => apiClient.get(`/api/v1/projects/${id}/calendar-events/`);
+export const createCalendarEvent = (id, data) => apiClient.post(`/api/v1/projects/${id}/calendar-events/`, data);
+export const deleteCalendarEvent = (pId, eId) => apiClient.delete(`/api/v1/projects/${pId}/calendar-events/${eId}/`);
+export const getAllCalendarEvents = () => apiClient.get('/api/v1/all-events/');
+
+// --- گزارشات ---
+export const getWeeklyReports = (id) => apiClient.get(`/api/v1/projects/${id}/weekly-reports/`);
+export const updateMonthlyReport = (id, content) => apiClient.patch(`/api/v1/projects/${id}/`, { monthly_report_text: content });
+export const updateOrCreateWeeklyReport = (pId, week, rId, content) => {
+    if (rId) return apiClient.patch(`/api/v1/projects/${pId}/weekly-reports/${rId}/`, { report_text: content });
+    return apiClient.post(`/api/v1/projects/${pId}/weekly-reports/`, { week_number: week, report_text: content });
 };
 
-export const getProjects = () => {
-  return apiClient.get('/api/v1/projects/');
+// --- مدیریت فایل‌ها ---
+export const getProjectFiles = (id) => apiClient.get(`/api/v1/projects/${id}/files/`);
+export const uploadProjectFile = (id, data) => apiClient.post(`/api/v1/projects/${id}/files/`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const deleteProjectFile = (pId, fId) => apiClient.delete(`/api/v1/projects/${pId}/files/${fId}/`);
+
+// --- مدیریت کاربران و پرسنل ---
+export const getUsers = () => apiClient.get('/api/v1/users/');
+export const getClients = () => apiClient.get('/api/v1/users/?role=client');
+export const getUsersByRole = (role) => apiClient.get(`/api/v1/users/?role=${role}`);
+export const createUser = (data) => apiClient.post('/api/v1/users/', data);
+export const updateUser = (id, data) => apiClient.patch(`/api/v1/users/${id}/`, data);
+export const deleteUser = (id) => apiClient.delete(`/api/v1/users/${id}/`);
+
+// --- پروفایل کاربری ---
+export const getUserProfile = () => apiClient.get('/api/v1/users/profile/');
+export const updateUserProfile = (data) => apiClient.patch('/api/v1/users/profile/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const changePassword = (data) => apiClient.post('/api/v1/users/change-password/', data);
+
+// --- مدیریت مالی پروژه ---
+export const getProjectPayments = (id) => apiClient.get(`/api/v1/projects/${id}/payments/`);
+export const createProjectPayment = (id, data) => apiClient.post(`/api/v1/projects/${id}/payments/`, data);
+export const deleteProjectPayment = (pId, payId) => apiClient.delete(`/api/v1/projects/${pId}/payments/${payId}/`);
+export const getProjectExpenses = (id) => apiClient.get(`/api/v1/projects/${id}/expenses/`);
+export const createProjectExpense = (id, data) => apiClient.post(`/api/v1/projects/${id}/expenses/`, data);
+export const deleteProjectExpense = (pId, exId) => apiClient.delete(`/api/v1/projects/${pId}/expenses/${exId}/`);
+export const exportProjectFinancials = (id) => apiClient.get(`/api/v1/projects/${id}/export-financials/`, { responseType: 'blob' });
+
+// --- امور مالی آژانس ---
+export const getSalaries = () => apiClient.get('/api/v1/salaries/');
+export const createSalary = (data) => apiClient.post('/api/v1/salaries/', data);
+export const deleteSalary = (id) => apiClient.delete(`/api/v1/salaries/${id}/`);
+export const getGeneralExpenses = () => apiClient.get('/api/v1/general-expenses/');
+export const createGeneralExpense = (data) => apiClient.post('/api/v1/general-expenses/', data);
+export const deleteGeneralExpense = (id) => apiClient.delete(`/api/v1/general-expenses/${id}/`);
+
+// --- سایر ---
+export const getNotifications = () => apiClient.get('/api/v1/notifications/');
+export const markNotificationAsRead = (id) => apiClient.post(`/api/v1/notifications/${id}/mark_as_read/`);
+export const markAllNotificationsAsRead = () => apiClient.post('/api/v1/notifications/mark_all_as_read/');
+export const getDashboardStats = () => apiClient.get('/api/v1/dashboard-stats/');
+export const getActivityLogs = () => apiClient.get('/api/v1/logs/');
+
+// --- نظرات سناریو ---
+export const getScenarioComments = (sid) => apiClient.get(`/api/v1/scenario-comments/?scenario=${sid}`);
+export const createScenarioComment = (data) => apiClient.post('/api/v1/scenario-comments/', data);
+
+// --- تیکت‌های پشتیبانی ---
+export const getTickets = () => apiClient.get('/api/v1/tickets/');
+export const createTicket = (data) => apiClient.post('/api/v1/tickets/', data);
+export const updateTicket = (id, data) => apiClient.patch(`/api/v1/tickets/${id}/`, data);
+export const getTicketMessages = (tid) => apiClient.get(`/api/v1/ticket-messages/?ticket=${tid}`);
+export const sendTicketMessage = (data) => apiClient.post('/api/v1/ticket-messages/', data);
+
+// --- ✅ سیستم چت و گفتگو (Chat System) ---
+
+export const getChatRooms = () => {
+  return apiClient.get('/api/v1/chat-rooms/');
 };
 
-export const getProjectDetails = (projectId) => {
-  return apiClient.get(`/api/v1/projects/${projectId}/`);
+export const getChatMessages = (roomId) => {
+  return apiClient.get(`/api/v1/chat-messages/?room=${roomId}`);
 };
 
-export const createProject = (projectData) => {
-  return apiClient.post('/api/v1/projects/', projectData);
-};
-
-export const updateProject = (projectId, projectData) => {
-  return apiClient.patch(`/api/v1/projects/${projectId}/`, projectData);
-};
-
-export const deleteProject = (projectId) => {
-  return apiClient.delete(`/api/v1/projects/${projectId}/`);
-};
-
-export const getScenarios = (projectId) => {
-  return apiClient.get(`/api/v1/projects/${projectId}/scenarios/`);
-};
-
-export const createScenario = (projectId, scenarioData) => {
-  return apiClient.post(`/api/v1/projects/${projectId}/scenarios/`, scenarioData);
-};
-
-export const updateScenario = (scenarioId, scenarioData, projectId) => {
-  return apiClient.patch(`/api/v1/projects/${projectId}/scenarios/${scenarioId}/`, scenarioData);
-};
-
-export const deleteScenario = (scenarioId, projectId) => {
-  return apiClient.delete(`/api/v1/projects/${projectId}/scenarios/${scenarioId}/`);
-};
-
-export const getCalendarEvents = (projectId) => {
-  return apiClient.get(`/api/v1/projects/${projectId}/calendar-events/`);
-};
-
-export const createCalendarEvent = (projectId, eventData) => {
-  return apiClient.post(`/api/v1/projects/${projectId}/calendar-events/`, eventData);
-};
-
-export const deleteCalendarEvent = (projectId, eventId) => {
-  return apiClient.delete(`/api/v1/projects/${projectId}/calendar-events/${eventId}/`);
-};
-
-export const getWeeklyReports = (projectId) => {
-  return apiClient.get(`/api/v1/projects/${projectId}/weekly-reports/`);
-};
-
-export const updateMonthlyReport = (projectId, content) => {
-  return apiClient.patch(`/api/v1/projects/${projectId}/`, {
-    monthly_report_text: content,
-  });
-};
-
-export const updateOrCreateWeeklyReport = (projectId, weekNumber, reportId, content) => {
-    if (reportId) {
-        return apiClient.patch(`/api/v1/projects/${projectId}/weekly-reports/${reportId}/`, {
-            report_text: content,
-        });
-    }
-    return apiClient.post(`/api/v1/projects/${projectId}/weekly-reports/`, {
-        week_number: weekNumber,
-        report_text: content,
-    });
-};
-
-export const getClients = () => {
-    return apiClient.get('/api/v1/users/?role=client');
-};
-
-export const getUsersByRole = (role) => {
-    return apiClient.get(`/api/v1/users/?role=${role}`);
-};
-
-// مدیریت فایل‌ها
-export const getProjectFiles = (projectId) => {
-  return apiClient.get(`/api/v1/projects/${projectId}/files/`);
-};
-
-export const uploadProjectFile = (projectId, formData) => {
-  return apiClient.post(`/api/v1/projects/${projectId}/files/`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
-};
-
-export const deleteProjectFile = (projectId, fileId) => {
-  return apiClient.delete(`/api/v1/projects/${projectId}/files/${fileId}/`);
-};
-
-// مدیریت کاربران
-export const getUsers = () => {
-  return apiClient.get('/api/v1/users/');
-};
-
-export const createUser = (userData) => {
-  return apiClient.post('/api/v1/users/', userData);
-};
-
-export const updateUser = (userId, userData) => {
-  return apiClient.patch(`/api/v1/users/${userId}/`, userData);
-};
-
-export const deleteUser = (userId) => {
-  return apiClient.delete(`/api/v1/users/${userId}/`);
-};
-
-// مدیریت مالی پروژه
-export const getProjectPayments = (projectId) => {
-  return apiClient.get(`/api/v1/projects/${projectId}/payments/`);
-};
-
-export const createProjectPayment = (projectId, paymentData) => {
-  return apiClient.post(`/api/v1/projects/${projectId}/payments/`, paymentData);
-};
-
-export const deleteProjectPayment = (projectId, paymentId) => {
-  return apiClient.delete(`/api/v1/projects/${projectId}/payments/${paymentId}/`);
-};
-
-// هزینه‌های پروژه
-export const getProjectExpenses = (projectId) => {
-  return apiClient.get(`/api/v1/projects/${projectId}/expenses/`);
-};
-
-export const createProjectExpense = (projectId, expenseData) => {
-  return apiClient.post(`/api/v1/projects/${projectId}/expenses/`, expenseData);
-};
-
-export const deleteProjectExpense = (projectId, expenseId) => {
-  return apiClient.delete(`/api/v1/projects/${projectId}/expenses/${expenseId}/`);
-};
-
-// خروجی اکسل
-export const exportProjectFinancials = (projectId) => {
-  return apiClient.get(`/api/v1/projects/${projectId}/export-financials/`, {
-    responseType: 'blob',
-  });
-};
-
-// اعلانات
-export const getNotifications = () => {
-  return apiClient.get('/api/v1/notifications/');
-};
-
-export const markNotificationAsRead = (id) => {
-  return apiClient.post(`/api/v1/notifications/${id}/mark_as_read/`);
-};
-
-export const markAllNotificationsAsRead = () => {
-  return apiClient.post('/api/v1/notifications/mark_all_as_read/');
-};
-
-// آمار داشبورد
-export const getDashboardStats = () => {
-  return apiClient.get('/api/v1/dashboard-stats/');
-};
-
-// مدیریت حقوق و هزینه‌های آژانس
-export const getSalaries = () => {
-  return apiClient.get('/api/v1/salaries/');
-};
-export const createSalary = (data) => {
-  return apiClient.post('/api/v1/salaries/', data);
-};
-export const deleteSalary = (id) => {
-  return apiClient.delete(`/api/v1/salaries/${id}/`);
-};
-
-export const getGeneralExpenses = () => {
-  return apiClient.get('/api/v1/general-expenses/');
-};
-export const createGeneralExpense = (data) => {
-  return apiClient.post('/api/v1/general-expenses/', data);
-};
-export const deleteGeneralExpense = (id) => {
-  return apiClient.delete(`/api/v1/general-expenses/${id}/`);
-};
-// --- ✅ سیستم نظرات سناریو (Comments) ---
-
-export const getScenarioComments = (scenarioId) => {
-  return apiClient.get(`/api/v1/scenario-comments/?scenario=${scenarioId}`);
-};
-
-export const createScenarioComment = (data) => {
-  return apiClient.post('/api/v1/scenario-comments/', data);
-};
-
-export const getAllCalendarEvents = () => {
-  return apiClient.get('/api/v1/all-events/');
-};
-
-export const getUserProfile = () => {
-  return apiClient.get('/api/v1/users/profile/')};
-
-// --- ✅ مدیریت پروفایل کاربری (User Profile) ---
-
-// export const getUserProfile = () => {
-//   // دریافت اطلاعات پروفایل کاربر لاگین شده
-//   return apiClient.get('/api/v1/users/profile/');
-// };
-
-export const updateUserProfile = (formData) => {
-  // ویرایش اطلاعات (شامل عکس)
-  // چون عکس داریم، هدر Content-Type باید multipart باشد که axios خودکار هندل می‌کند
-  return apiClient.patch('/api/v1/users/profile/', formData, {
+export const sendChatMessage = (formData) => {
+  // ارسال پیام (متن یا فایل)
+  return apiClient.post('/api/v1/chat-messages/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
   });
 };
 
-export const changePassword = (passwordData) => {
-  // تغییر رمز عبور
-  return apiClient.post('/api/v1/users/change-password/', passwordData);
-};
-
-// --- ✅ سیستم تیکت پشتیبانی (Support) ---
-
-export const getTickets = () => {
-  return apiClient.get('/api/v1/tickets/');
-};
-
-export const createTicket = (data) => {
-  return apiClient.post('/api/v1/tickets/', data);
-};
-
-export const updateTicket = (ticketId, data) => {
-    // برای تغییر وضعیت یا بستن تیکت
-  return apiClient.patch(`/api/v1/tickets/${ticketId}/`, data);
-};
-
-export const getTicketMessages = (ticketId) => {
-  return apiClient.get(`/api/v1/ticket-messages/?ticket=${ticketId}`);
-};
-
-export const sendTicketMessage = (data) => {
-  return apiClient.post('/api/v1/ticket-messages/', data);
-};
-
-export const getActivityLogs = () => {
-  return apiClient.get('/api/v1/logs/');
-};
 
 export default apiClient;

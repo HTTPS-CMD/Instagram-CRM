@@ -16,6 +16,8 @@ import GlobalCalendarPage from './components/GlobalCalendarPage';
 import UserProfilePage from './components/UserProfilePage';
 import SupportPage from './components/SupportPage';
 import ActivityLogsPage from './components/ActivityLogsPage';
+import ChatPage from "./components/ChatPage.jsx";
+import ProjectTypeSelection from './components/ProjectTypeSelection';
 
 // ایجاد Context برای دسترسی به اطلاعات کاربر در کل برنامه
 export const UserContext = createContext(null);
@@ -77,9 +79,14 @@ function App() {
 
           <Route path="/login" element={<LoginPage />} />
 
+           <Route
+              path="/project/new"
+              element={ <ProtectedRoute> <ProjectTypeSelection /> </ProtectedRoute> }
+          />
+
           <Route
-            path="/project/new"
-            element={ <ProtectedRoute> <ProjectCreatePage /> </ProtectedRoute> }
+             path="/project/create"
+             element={ <ProtectedRoute> <ProjectCreatePage /> </ProtectedRoute> }
           />
 
           <Route
@@ -124,8 +131,8 @@ function App() {
           />
 
           <Route
-            path="/support"
-            element={<ProtectedRoute> <SupportPage /> </ProtectedRoute> }
+            path="/chat"
+            element={<ProtectedRoute> <ChatPage /> </ProtectedRoute> }
           />
 
           <Route

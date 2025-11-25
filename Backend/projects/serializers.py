@@ -1,45 +1,39 @@
 # backend/projects/serializers.py
 from rest_framework import serializers
-from .models import (
-    Project, Scenario, CalendarEvent, WeeklyReport, ProjectFile,
-    ProjectPayment,ProjectExpense,Notification,SalaryPayment,GeneralExpense,
-    ScenarioComment,Ticket, TicketMessage, ActivityLog)
-from django.contrib.auth import get_user_model
-user_model = get_user_model()
-
+from .models import *
 
 class ProjectListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['id', 'project_name', 'start_date', 'end_date', 'page_username', 'is_started']
-
+        fields = ['id', 'project_name', 'start_date', 'end_date', 'page_username', 'is_started', 'project_type']
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
     page_logo = serializers.ImageField(use_url=True, required=False)
     cover_post_asset = serializers.ImageField(use_url=True, required=False)
     cover_highlight_asset = serializers.ImageField(use_url=True, required=False)
-
     class Meta:
         model = Project
-        fields = '__all__'  # این خط باید تمام فیلدهای جدید را شامل شود
+        fields = '__all__'
 
-
-# ... (بقیه سریالایزرها بدون تغییر) ...
 class ScenarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scenario
         fields = '__all__'
         read_only_fields = ['project']
 
+class ScenarioCommentSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.full_name', read_only=True)
+    class Meta:
+        model = ScenarioComment
+        fields = '__all__'
+        read_only_fields = ['author', 'created_at']
 
 class CalendarEventSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(source='project.project_name', read_only=True)
-
     class Meta:
         model = CalendarEvent
         fields = '__all__'
         read_only_fields = ['project']
-
 
 class WeeklyReportSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,13 +41,11 @@ class WeeklyReportSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['project']
 
-
 class ProjectFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectFile
-        fields = ['id', 'project', 'file', 'description', 'uploaded_at']
+        fields = '__all__'
         read_only_fields = ['project', 'uploaded_at']
-
 
 class ProjectPaymentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,79 +53,51 @@ class ProjectPaymentSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['project', 'created_at']
 
-
 class ProjectExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectExpense
         fields = '__all__'
         read_only_fields = ['project', 'created_at']
 
-
-# ✅ سریالایزر اعلانات
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = '__all__'
 
-
-# ✅ سریالایزر حقوق
 class SalaryPaymentSerializer(serializers.ModelSerializer):
     personnel_name = serializers.CharField(source='personnel.full_name', read_only=True)
-    personnel_username = serializers.CharField(source='personnel.username', read_only=True)
-
     class Meta:
         model = SalaryPayment
         fields = '__all__'
 
-# ✅ سریالایزر هزینه‌های جاری
 class GeneralExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = GeneralExpense
         fields = '__all__'
 
-
-# ✅ سریالایزر نظرات
-class ScenarioCommentSerializer(serializers.ModelSerializer):
-    author_name = serializers.CharField(source='author.full_name', read_only=True)
-    author_username = serializers.CharField(source='author.username', read_only=True)
-    author_role = serializers.CharField(source='author.role', read_only=True)
-
-    class Meta:
-        model = ScenarioComment
-        fields = '__all__'
-        read_only_fields = ['author', 'created_at']
-
-
-# ✅ سریالایزر پیام تیکت
-class TicketMessageSerializer(serializers.ModelSerializer):
+class ChatMessageSerializer(serializers.ModelSerializer):
     sender_name = serializers.CharField(source='sender.full_name', read_only=True)
-    sender_role = serializers.CharField(source='sender.role', read_only=True)
-
+    sender_avatar = serializers.ImageField(source='sender.avatar', read_only=True)
+    reply_to_text = serializers.CharField(source='reply_to.text', read_only=True, allow_null=True)
+    reply_to_sender = serializers.CharField(source='reply_to.sender.full_name', read_only=True, allow_null=True)
     class Meta:
-        model = TicketMessage
+        model = ChatMessage
         fields = '__all__'
-        read_only_fields = ['sender', 'ticket', 'created_at']
+        read_only_fields = ['sender', 'room', 'created_at']
 
-
-# ✅ سریالایزر تیکت
-class TicketSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(source='user.full_name', read_only=True)
-    user_role = serializers.CharField(source='user.role', read_only=True)
-
-    # آخرین پیام را هم می‌فرستیم تا در لیست نمایش دهیم (اختیاری)
-
+class ChatRoomSerializer(serializers.ModelSerializer):
+    last_message = serializers.SerializerMethodField()
     class Meta:
-        model = Ticket
-        fields = '__all__'
-        read_only_fields = ['user', 'created_at', 'updated_at']
+        model = ChatRoom
+        fields = ['id', 'type', 'name', 'updated_at', 'last_message']
+    def get_last_message(self, obj):
+        last = obj.messages.order_by('-created_at').first()
+        return ChatMessageSerializer(last).data if last else None
 
-
-# ✅ سریالایزر لاگ‌ها
 class ActivityLogSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.full_name', read_only=True)
-    user_role = serializers.CharField(source='user.role', read_only=True)
     project_name = serializers.CharField(source='project.project_name', read_only=True, allow_null=True)
-
     class Meta:
         model = ActivityLog
         fields = '__all__'
+
