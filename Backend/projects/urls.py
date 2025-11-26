@@ -17,6 +17,8 @@ standard_router.register(r'all-events', GlobalCalendarEventViewSet, basename='al
 standard_router.register(r'packages', PackageViewSet, basename='packages')
 standard_router.register(r'payment-methods', PaymentMethodViewSet, basename='payment-methods')
 standard_router.register(r'agency-info', AgencyInfoViewSet, basename='agency-info')
+standard_router.register(r'extra-services', ExtraServiceViewSet, basename='extra-services')
+standard_router.register(r'service-requests', ServiceRequestViewSet, basename='service-requests')
 
 projects_router = routers.NestedDefaultRouter(standard_router, r'projects', lookup='project')
 projects_router.register(r'scenarios', ScenarioViewSet, basename='project-scenarios')
@@ -25,6 +27,7 @@ projects_router.register(r'weekly-reports', WeeklyReportViewSet, basename='proje
 projects_router.register(r'files', ProjectFileViewSet, basename='project-files')
 projects_router.register(r'payments', ProjectPaymentViewSet, basename='project-payments')
 projects_router.register(r'expenses', ProjectExpenseViewSet, basename='project-expenses')
+
 
 urlpatterns = [
     path('', include(standard_router.urls)),

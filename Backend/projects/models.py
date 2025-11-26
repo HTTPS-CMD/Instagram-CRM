@@ -1,6 +1,8 @@
 # backend/projects/models.py
 from django.db import models
 from django.conf import settings
+from datetime import date
+from datetime import timedelta
 
 
 # ✅ جدول ۱۵: پکیج‌های خدمات (تنظیمات سیستم)
@@ -90,6 +92,56 @@ class Project(models.Model):
                                       related_name='designer_projects', limit_choices_to={'role': 'designer'})
     social_admin_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                           related_name='social_projects', limit_choices_to={'role': 'social_admin'})
+
+    def check_payment_status(self):
+        """
+        این متد بررسی می‌کند که آیا قسط عقب‌افتاده‌ای وجود دارد یا خیر.
+        اگر قسط عقب‌افتاده باشد، پروژه را غیرفعال می‌کند.
+        اگر همه چیز صاف باشد، پروژه را فعال می‌کند.
+        """
+        if not self.payment_method or not self.start_date or not self.end_date:
+            return  # اطلاعات کافی نیست
+
+        # ۱. محاسبه کل پرداختی‌ها
+        total_paid = self.payments.filter(is_paid=True).aggregate(models.Sum('amount'))['amount__sum'] or 0
+
+        # ۲. محاسبه اقساط و سررسیدها
+        stages = [int(s) for s in self.payment_method.stages.split(',')]
+        total_contract = self.contract_amount
+
+        today = date.today()
+        project_duration = (self.end_date - self.start_date).days
+
+        cumulative_amount = 0
+        has_overdue = False
+
+        for i, percent in enumerate(stages):
+            # محاسبه مبلغ این قسط
+            installment_amount = (total_contract * percent) / 100
+            cumulative_amount += installment_amount
+
+            # محاسبه تاریخ سررسید این قسط
+            if i == 0:
+                due_date = self.start_date
+            elif i == len(stages) - 1:
+                due_date = self.end_date
+            else:
+                due_date = self.start_date + timedelta(days=(project_duration * (i / len(stages))))
+
+            # اگر سررسید گذشته و هنوز کل مبلغ تا اینجا پرداخت نشده
+            if today > due_date and total_paid < cumulative_amount:
+                has_overdue = True
+                break
+
+        # ۳. اعمال تغییر وضعیت
+        if has_overdue and self.is_started:
+            self.is_started = False
+            self.save()
+            # (اختیاری) ارسال اعلان به مدیر
+        elif not has_overdue and not self.is_started:
+            # اگر بدهی صاف شد، دوباره فعال شود (اختیاری)
+            self.is_started = True
+            self.save()
 
     def __str__(self):
         return self.project_name
@@ -212,3 +264,31 @@ class ActivityLog(models.Model):
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+# ✅ جدول ۱۸: کاتالوگ خدمات اضافه (لیست خدمات و قیمت‌ها)
+class ExtraService(models.Model):
+    title = models.CharField(max_length=255, verbose_name="عنوان خدمت")
+    price = models.BigIntegerField(verbose_name="قیمت واحد (تومان)")
+    description = models.TextField(blank=True, verbose_name="توضیحات")
+    icon_name = models.CharField(max_length=50, default='star', verbose_name="نام آیکون (برای فرانت)")
+
+    def __str__(self):
+        return f"{self.title} - {self.price}"
+
+# ✅ جدول ۱۹: درخواست‌های ثبت شده
+class ServiceRequest(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='service_requests')
+    service = models.ForeignKey(ExtraService, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1, verbose_name="تعداد")
+    total_price = models.BigIntegerField(verbose_name="قیمت کل")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # محاسبه خودکار قیمت کل
+        self.total_price = self.service.price * self.quantity
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.project.project_name} - {self.service.title} (x{self.quantity})"

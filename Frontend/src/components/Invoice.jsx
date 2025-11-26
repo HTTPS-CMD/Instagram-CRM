@@ -1,13 +1,12 @@
 // src/components/Invoice.jsx
 import React from 'react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider, Grid } from '@mui/material';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider, Grid, Avatar } from '@mui/material';
 import moment from 'jalali-moment';
 
 // تابع کمکی برای فرمت پول
 const formatPrice = (price) => Number(price).toLocaleString('fa-IR');
 
-// این کامپوننت فقط برای چاپ استفاده می‌شود و استایل‌های مخصوص پرینت دارد
-export const Invoice = React.forwardRef(({ payment, project }, ref) => {
+export const Invoice = React.forwardRef(({ payment, project, agency }, ref) => {
     if (!payment || !project) return null;
 
     return (
@@ -15,9 +14,17 @@ export const Invoice = React.forwardRef(({ payment, project }, ref) => {
 
             {/* --- سربرگ فاکتور --- */}
             <Box sx={{ borderBottom: '2px solid #000', pb: 2, mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                    <Typography variant="h4" fontWeight="bold" sx={{fontSize: '24px'}}>فاکتور رسمی</Typography>
-                    <Typography variant="body2" sx={{mt: 1, fontSize: '14px'}}>آژانس تولید محتوا (نام برند شما)</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {/* نمایش لوگوی آژانس اگر موجود باشد */}
+                    {agency?.logo && (
+                        <img src={agency.logo} alt="Logo" style={{ width: 80, height: 80, objectFit: 'contain' }} />
+                    )}
+                    <Box>
+                        <Typography variant="h4" fontWeight="bold" sx={{fontSize: '24px'}}>فاکتور رسمی</Typography>
+                        <Typography variant="body2" sx={{mt: 1, fontSize: '14px'}}>
+                            {agency?.brand_name || "آژانس تولید محتوا"}
+                        </Typography>
+                    </Box>
                 </Box>
                 <Box sx={{ textAlign: 'left' }}>
                     <Typography variant="body2" sx={{fontSize: '14px'}}><strong>شماره فاکتور:</strong> {payment.id}</Typography>
@@ -29,12 +36,13 @@ export const Invoice = React.forwardRef(({ payment, project }, ref) => {
             <Grid container spacing={3} sx={{ mb: 4, border: '1px solid #ddd', p: 2, borderRadius: 2 }}>
                 <Grid item xs={6}>
                     <Typography variant="h6" sx={{fontSize: '16px', mb: 1, fontWeight: 'bold'}}>فروشنده:</Typography>
-                    <Typography variant="body2">نام شرکت / شخص: آژانس محتوا</Typography>
-                    <Typography variant="body2">شماره تماس: ۰۹۱۲۳۴۵۶۷۸۹</Typography>
+                    <Typography variant="body2">نام: {agency?.brand_name || "آژانس محتوا"}</Typography>
+                    <Typography variant="body2">شماره تماس: {agency?.phone || "۰۹۱۲..."}</Typography>
+                    <Typography variant="body2">آدرس: {agency?.address || "تهران..."}</Typography>
                 </Grid>
                 <Grid item xs={6}>
                     <Typography variant="h6" sx={{fontSize: '16px', mb: 1, fontWeight: 'bold'}}>خریدار:</Typography>
-                    <Typography variant="body2">نام مشتری: {project.client_user_details?.full_name || project.page_username}</Typography>
+                    {/* <Typography variant="body2">نام مشتری: {project.client_user_details?.full_name || project.page_username}</Typography> */}
                     <Typography variant="body2">پروژه: {project.project_name}</Typography>
                 </Grid>
             </Grid>
@@ -80,16 +88,18 @@ export const Invoice = React.forwardRef(({ payment, project }, ref) => {
             <Grid container spacing={4} sx={{ mt: 8 }}>
                 <Grid item xs={6} sx={{ textAlign: 'center' }}>
                     <Typography fontWeight="bold" mb={8}>مهر و امضای فروشنده</Typography>
-                    {/* <img src="/stamp.png" width="100" alt="مهر" /> */}
                 </Grid>
                 <Grid item xs={6} sx={{ textAlign: 'center' }}>
                     <Typography fontWeight="bold" mb={8}>امضای خریدار</Typography>
                 </Grid>
             </Grid>
 
-            <Box sx={{ mt: 'auto', pt: 4, textAlign: 'center', fontSize: '12px', color: '#666', borderTop: '1px solid #eee' }}>
-                آدرس: تهران، خیابان ولیعصر، کوچه ... | وبسایت: www.example.com
-            </Box>
+            {/* --- پاورقی (Footer) --- */}
+            {agency?.footer_text && (
+                <Box sx={{ mt: 'auto', pt: 4, textAlign: 'center', fontSize: '12px', color: '#666', borderTop: '1px solid #eee' }}>
+                    {agency.footer_text}
+                </Box>
+            )}
         </div>
     );
 });

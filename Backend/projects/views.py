@@ -16,7 +16,8 @@ from .models import (
     ProjectFile, ProjectPayment, ProjectExpense, Notification,
     SalaryPayment, GeneralExpense, ScenarioComment, ActivityLog,
     ChatRoom, ChatMessage,
-    PaymentMethod, AgencyInfo,Package
+    PaymentMethod, AgencyInfo,Package,
+    ExtraService, ServiceRequest
 )
 
 # ایمپورت سریالایزرها
@@ -27,7 +28,8 @@ from .serializers import (
     NotificationSerializer, SalaryPaymentSerializer, GeneralExpenseSerializer,
     ScenarioCommentSerializer, ActivityLogSerializer,
     ChatRoomSerializer, ChatMessageSerializer,
-    PaymentMethodSerializer, AgencyInfoSerializer,PackageSerializer
+    PaymentMethodSerializer, AgencyInfoSerializer,PackageSerializer,
+    ExtraServiceSerializer, ServiceRequestSerializer
 )
 
 BOXAPI_USERNAME = "mhrshdbrya"
@@ -581,3 +583,32 @@ class AgencyInfoViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return [permissions.IsAuthenticated()]
         return [permissions.IsAuthenticated(), IsAdminUser()]
+
+
+# ✅ ViewSet کاتالوگ خدمات (همه می‌توانند ببینند)
+class ExtraServiceViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ExtraService.objects.all()
+    serializer_class = ExtraServiceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+# ✅ ViewSet ثبت سفارش خدمات
+class ServiceRequestViewSet(viewsets.ModelViewSet):
+    serializer_class = ServiceRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'admin' or user.is_superuser:
+            return ServiceRequest.objects.all().order_by('-created_at')
+        # مشتری فقط سفارشات پروژه‌های خودش را می‌بیند
+        return ServiceRequest.objects.filter(project__client_user=user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        # چک کردن اینکه کاربر به پروژه دسترسی دارد
+        project = serializer.validated_data['project']
+        user = self.request.user
+        if user.role != 'admin' and project.client_user != user:
+            raise permissions.PermissionDenied("شما اجازه ثبت سفارش برای این پروژه را ندارید.")
+
+        serializer.save()

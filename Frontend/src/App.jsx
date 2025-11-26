@@ -19,6 +19,7 @@ import ActivityLogsPage from './components/ActivityLogsPage';
 import ChatPage from "./components/ChatPage.jsx";
 import ProjectTypeSelection from './components/ProjectTypeSelection';
 import SystemSettingsPage from './components/SystemSettingsPage';
+import ExtraServicesPage from './components/ExtraServicesPage';
 
 // ایجاد Context برای دسترسی به اطلاعات کاربر در کل برنامه
 export const UserContext = createContext(null);
@@ -116,6 +117,11 @@ function App() {
           <Route
             path="/financials"
             element={ <ProtectedRoute> <AgencyFinancialsPage /> </ProtectedRoute> }
+          />
+
+          <Route
+            path="/services"
+            element={<ProtectedRoute><ExtraServicesPage /> </ProtectedRoute>}
           />
 
           {/* ریدایرکت پیش‌فرض */}

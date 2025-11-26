@@ -27,7 +27,6 @@ import AIAnalysisTab from "./AIAnalysisTab";
 import moment from 'jalali-moment';
 import { UserContext } from "../App";
 
-// آیکون‌ها
 import {
     Info as InfoIcon,
     CalendarMonth as CalendarMonthIcon,
@@ -60,7 +59,6 @@ import 'moment/locale/fa';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
-// کامپوننت سلکت سفارشی
 const HoverSelect = ({ children, ...props }) => {
     const [open, setOpen] = useState(false);
     return (
@@ -150,6 +148,7 @@ function ProjectDetailPage() {
 
         setProject(projectResponse.data);
 
+        // ✅ اصلاحیه: لیست کاربران فقط برای ادمین گرفته می‌شود (بخش تکراری حذف شد)
         if (isAdmin) {
             try {
                 const usersRes = await getUsers();
@@ -161,16 +160,6 @@ function ProjectDetailPage() {
                 setSocialAdmins(allUsers.filter(u => u.role === 'social_admin'));
             } catch (uErr) { console.error("Error fetching users:", uErr); }
         }
-
-        try {
-            const usersRes = await getUsers();
-            const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data.results || []);
-            setWriters(allUsers.filter(u => u.role === 'writer'));
-            setVideographers(allUsers.filter(u => u.role === 'videographer'));
-            setEditors(allUsers.filter(u => u.role === 'editor'));
-            setDesigners(allUsers.filter(u => u.role === 'designer'));
-            setSocialAdmins(allUsers.filter(u => u.role === 'social_admin'));
-        } catch (uErr) { console.error(uErr); }
 
         const formattedEvents = eventsResponse.data.map(event => ({
             id: event.id, type: event.event_type, title: event.title,
@@ -260,21 +249,18 @@ function ProjectDetailPage() {
       color: event.type === 'filming' ? '#FF9800' : (event.type === 'meeting' ? '#9c27b0' : '#1976D2')
   }));
 
-  // ✅ لیست هوشمند تب‌ها بر اساس نوع پروژه
   const getVisibleTabs = () => {
       if (!project) return [];
       const isInsta = project.project_type === 'instagram';
 
-      // --- ✅ اصلاحیه: اگر تیزر است، امور مالی را هم نشان نده ---
       const allTabs = [
           { id: 'dashboard', label: "اطلاعات پروژه", icon: <InfoIcon />, show: true },
           { id: 'calendar', label: "تقویم محتوایی", icon: <CalendarMonthIcon />, show: isInsta },
           { id: 'scenarios', label: "سناریوها", icon: <DescriptionIcon />, show: true },
           { id: 'reports', label: "گزارش کار", icon: <ReportIcon />, show: isInsta },
-          { id: 'analysis', label: "تحلیل ماهانه", icon: <AIIcon />, show: isInsta }, // ✅ فعال شد
+          { id: 'analysis', label: "تحلیل ماهانه", icon: <AIIcon />, show: isInsta },
           { id: 'media', label: "مدیریت فایل", icon: <PermMediaIcon />, show: true },
-          // --- 👇 تغییر این خط 👇 ---
-          { id: 'financials', label: "امور مالی", icon: <AttachMoneyIcon />, show: isInsta }, // فقط اینستاگرام
+          { id: 'financials', label: "امور مالی", icon: <AttachMoneyIcon />, show: isInsta },
       ];
       return allTabs.filter(t => t.show);
   };
@@ -307,7 +293,7 @@ function ProjectDetailPage() {
                     src={project.page_logo}
                     sx={{
                         width: 100, height: 100,
-                        bgcolor: project.project_type === 'teaser' ? 'warning.main' : 'primary.main', // رنگ متفاوت برای تیزر
+                        bgcolor: project.project_type === 'teaser' ? 'warning.main' : 'primary.main',
                         fontSize: '2.5rem', fontWeight: 'bold',
                         boxShadow: '0 10px 30px rgba(0,0,0,0.3)', border: '4px solid rgba(255,255,255,0.1)'
                     }}
@@ -348,7 +334,6 @@ function ProjectDetailPage() {
         </Stack>
       </Paper>
 
-      {/* --- نوار تب‌ها (داینامیک) --- */}
       <Paper elevation={0} sx={{ bgcolor: 'transparent', mb: 3 }}>
         <Tabs
             value={currentTab}
@@ -370,8 +355,6 @@ function ProjectDetailPage() {
           ))}
         </Tabs>
       </Paper>
-
-      {/* --- محتوای تب‌ها --- */}
 
       {visibleTabs[currentTab]?.id === 'dashboard' && (
         <TabPanel value={currentTab} index={currentTab}>
@@ -470,7 +453,7 @@ function ProjectDetailPage() {
 
       {visibleTabs[currentTab]?.id === 'analysis' && (
           <TabPanel value={currentTab} index={currentTab}>
-             <AIAnalysisTab projectId={projectId} /> {/* محتوای غیرفعال هوش مصنوعی */}
+             <AIAnalysisTab projectId={projectId} />
           </TabPanel>
       )}
 
@@ -486,7 +469,6 @@ function ProjectDetailPage() {
           </TabPanel>
       )}
 
-      {/* --- مودال‌ها (بدون تغییر) --- */}
       <Dialog open={openEventModal} onClose={() => setOpenEventModal(false)} maxWidth="sm" fullWidth>
           <DialogTitle sx={{bgcolor:'primary.main', color:'white'}}>رویداد جدید</DialogTitle>
           <DialogContent dividers><CalendarEventForm projectId={projectId} onEventCreated={handleEventCreated} onCancel={()=>setOpenEventModal(false)}/></DialogContent>

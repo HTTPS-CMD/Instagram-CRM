@@ -24,7 +24,7 @@ import moment from 'jalali-moment';
 import {
     updateProject, getProjectPayments, createProjectPayment, deleteProjectPayment,
     getProjectExpenses, createProjectExpense, deleteProjectExpense, exportProjectFinancials,
-    getPackages, getPaymentMethods
+    getPackages, getPaymentMethods, getAgencyInfo // ✅ تابع جدید
 } from '../api';
 import { useSnackbar } from 'notistack';
 import { useReactToPrint } from 'react-to-print';
@@ -37,6 +37,7 @@ function FinancialManagement({ project, onProjectUpdate, isAdmin }) {
 
     const [packagesList, setPackagesList] = useState([]);
     const [methodsList, setMethodsList] = useState([]);
+    const [agencyInfo, setAgencyInfo] = useState(null); // ✅ استیت اطلاعات آژانس
     const [configLoading, setConfigLoading] = useState(true);
 
     const [payments, setPayments] = useState([]);
@@ -69,30 +70,43 @@ function FinancialManagement({ project, onProjectUpdate, isAdmin }) {
         const fetchAllData = async () => {
             setConfigLoading(true);
             try {
-                const [pkgRes, methodRes, payRes, expRes] = await Promise.all([
+                const basePromises = [
                     getPackages(),
                     getPaymentMethods(),
                     getProjectPayments(project.id),
-                ]);
+                    getAgencyInfo() // ✅ دریافت اطلاعات آژانس
+                ];
 
                 if (isAdmin) {
-                    promises.push(getProjectExpenses(project.id));
+                    basePromises.push(getProjectExpenses(project.id));
                 }
 
-                // هندل کردن Pagination احتمالی در پاسخ‌ها
+                const results = await Promise.all(basePromises);
+
+                const pkgRes = results[0];
+                const methodRes = results[1];
+                const payRes = results[2];
+                const agencyRes = results[3]; // ✅ نتیجه آژانس
+                const expRes = isAdmin ? results[4] : { data: [] };
+
                 setPackagesList(Array.isArray(pkgRes.data) ? pkgRes.data : (pkgRes.data.results || []));
                 setMethodsList(Array.isArray(methodRes.data) ? methodRes.data : (methodRes.data.results || []));
+
+                // ذخیره اطلاعات آژانس (اولین آیتم آرایه)
+                const agnData = Array.isArray(agencyRes.data) ? agencyRes.data : (agencyRes.data.results || []);
+                if (agnData.length > 0) setAgencyInfo(agnData[0]);
 
                 setPayments(payRes.data);
                 setExpenses(expRes.data);
 
-                // ست کردن مقادیر فعلی (با اطمینان از اینکه null نیستند)
                 setSelectedPkgId(project.selected_package);
                 setSelectedMethodId(project.payment_method);
 
             } catch (err) {
-                console.error(err);
-                enqueueSnackbar('خطا در دریافت اطلاعات مالی', { variant: 'error' });
+                console.error("Error fetching data:", err);
+                if (err.response && err.response.status !== 403) {
+                    enqueueSnackbar('خطا در دریافت اطلاعات', { variant: 'error' });
+                }
             } finally {
                 setConfigLoading(false);
             }
@@ -100,7 +114,6 @@ function FinancialManagement({ project, onProjectUpdate, isAdmin }) {
         fetchAllData();
     }, [project.id, isAdmin]);
 
-    // سینک کردن استیت داخلی با تغییرات پدری (مهم)
     useEffect(() => {
         setSelectedPkgId(project.selected_package);
         setSelectedMethodId(project.payment_method);
@@ -115,39 +128,29 @@ function FinancialManagement({ project, onProjectUpdate, isAdmin }) {
     const currentMethod = methodsList.find(m => m.id === selectedMethodId);
     const paymentStages = currentMethod ? currentMethod.stages.split(',').map(Number) : [];
 
-    // --- ✅ هندلر اصلاح شده انتخاب پکیج و روش ---
     const handleSelectionChange = async (type, id) => {
         if (!isAdmin) return;
 
         let newPkgId = type === 'package' ? id : selectedPkgId;
         let newMethodId = type === 'method' ? id : selectedMethodId;
 
-        // پیدا کردن آبجکت‌های انتخاب شده
         const selectedPkg = packagesList.find(p => p.id === newPkgId);
         const selectedMethod = methodsList.find(m => m.id === newMethodId);
 
-        // اگر پکیج انتخاب نشده باشد، کاری نمی‌توان کرد (چون قیمت پایه نداریم)
         if (!selectedPkg && type === 'method') return;
 
-        // محاسبه قیمت جدید
-        // اگر پکیج هنوز انتخاب نشده باشد (در حال انتخاب اولین بار)، قیمت ۰ است
         const basePrice = selectedPkg ? selectedPkg.price : 0;
-
-        // اگر روش پرداخت انتخاب نشده باشد، تخفیف ۰ است
         const discount = (selectedMethod && selectedMethod.discount_percent > 0)
             ? (basePrice * selectedMethod.discount_percent / 100)
             : 0;
 
         const newContractAmount = basePrice - discount;
 
-        // آپدیت لوکال سریع
         if (type === 'package') setSelectedPkgId(id);
         else setSelectedMethodId(id);
 
         try {
-            const payload = {
-                contract_amount: newContractAmount
-            };
+            const payload = { contract_amount: newContractAmount };
             if (newPkgId) payload.selected_package = newPkgId;
             if (newMethodId) payload.payment_method = newMethodId;
 
@@ -257,23 +260,29 @@ function FinancialManagement({ project, onProjectUpdate, isAdmin }) {
                          {packagesList.length === 0 ? (
                              <Typography color="error" variant="caption">هیچ پکیجی تعریف نشده است. لطفاً از منوی تنظیمات سیستم، پکیج اضافه کنید.</Typography>
                          ) : (
-                             <Grid container spacing={1}>
+                             <Grid container spacing={2}>
                                 {packagesList.map((pkg) => (
                                     <Grid item xs={12} sm={6} key={pkg.id}>
                                         <Card
-                                            elevation={pkg.id === selectedPkgId ? 6 : 1}
+                                            elevation={pkg.id === selectedPkgId ? 8 : 2}
                                             sx={{
                                                 border: pkg.id === selectedPkgId ? '2px solid #3da9fc' : '1px solid rgba(255,255,255,0.1)',
-                                                bgcolor: pkg.id === selectedPkgId ? 'rgba(61, 169, 252, 0.08)' : 'background.paper',
-                                                transition: 'all 0.2s'
+                                                bgcolor: pkg.id === selectedPkgId ? 'rgba(61, 169, 252, 0.15)' : 'background.paper',
+                                                transition: 'all 0.3s ease',
+                                                cursor: isAdmin ? 'pointer' : 'default',
+                                                transform: pkg.id === selectedPkgId ? 'scale(1.02)' : 'scale(1)',
+                                                '&:hover': { borderColor: '#3da9fc', boxShadow: '0 4px 20px rgba(61, 169, 252, 0.2)' }
                                             }}
                                         >
-                                            <CardActionArea onClick={() => handleSelectionChange('package', pkg.id)} disabled={!isAdmin} sx={{ p: 1.5 }}>
-                                                <Stack direction="row" justifyContent="space-between">
-                                                    <Typography variant="subtitle2" fontWeight="bold">{pkg.title}</Typography>
-                                                    {pkg.id === selectedPkgId && <CheckIcon color="primary" fontSize="small"/>}
+                                            <CardActionArea onClick={() => handleSelectionChange('package', pkg.id)} disabled={!isAdmin} sx={{ p: 2 }}>
+                                                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                                                    <Typography variant="subtitle1" fontWeight="bold" color={pkg.id === selectedPkgId ? 'primary.main' : 'text.primary'}>{pkg.title}</Typography>
+                                                    {pkg.id === selectedPkgId && <CheckIcon color="primary" />}
                                                 </Stack>
-                                                <Typography variant="body2" color="text.secondary">{formatPrice(pkg.price)} تومان</Typography>
+                                                <Typography variant="h5" fontWeight="900" color={pkg.id === selectedPkgId ? 'text.primary' : 'text.secondary'} mb={1}>
+                                                    {formatPrice(pkg.price)} <Typography component="span" variant="caption">تومان</Typography>
+                                                </Typography>
+                                                {pkg.description && <Typography variant="caption" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{pkg.description}</Typography>}
                                             </CardActionArea>
                                         </Card>
                                     </Grid>
@@ -467,7 +476,15 @@ function FinancialManagement({ project, onProjectUpdate, isAdmin }) {
                 <DialogActions><Button onClick={() => setOpenExpenseModal(false)}>انصراف</Button><Button onClick={handleCreateExpense} variant="contained" color="error" disabled={actionLoading}>ثبت</Button></DialogActions>
             </Dialog>
 
-            <div style={{ display: 'none' }}><Invoice ref={invoiceRef} payment={printPayment} project={project} /></div>
+            {/* ✅ ارسال اطلاعات آژانس به کامپوننت فاکتور */}
+            <div style={{ display: 'none' }}>
+                <Invoice
+                    ref={invoiceRef}
+                    payment={printPayment}
+                    project={project}
+                    agency={agencyInfo} // ✅ اینجا پاس دادیم
+                />
+            </div>
         </Box>
     );
 }

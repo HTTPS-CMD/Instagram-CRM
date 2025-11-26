@@ -205,4 +205,7 @@ export const createAgencyInfo = (data) => {
     });
 };
 
+export const getExtraServices = () => apiClient.get('/api/v1/extra-services/');
+export const createServiceRequest = (data) => apiClient.post('/api/v1/service-requests/', data);
+
 export default apiClient;

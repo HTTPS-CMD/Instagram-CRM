@@ -134,3 +134,22 @@ class ActivityLogSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(source='project.project_name', read_only=True, allow_null=True)
 
     class Meta: model = ActivityLog; fields = '__all__'
+
+
+
+class ExtraServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExtraService
+        fields = '__all__'
+
+
+class ServiceRequestSerializer(serializers.ModelSerializer):
+    service_name = serializers.CharField(source='service.title', read_only=True)
+    project_name = serializers.CharField(source='project.project_name', read_only=True)
+
+    # ✅ اصلاحیه: در سریالایزر باید از IntegerField استفاده کنیم (نه BigInteger)
+    total_price = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = ServiceRequest
+        fields = '__all__'
