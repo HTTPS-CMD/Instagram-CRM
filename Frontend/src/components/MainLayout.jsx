@@ -20,7 +20,8 @@ import {
   SupportAgent as SupportIcon,
   History as HistoryIcon,
   Chat as ChatIcon,
-  Dashboard as DashboardIcon // ✅ آیکون داشبورد
+  Dashboard as DashboardIcon, // ✅ آیکون داشبورد
+  Settings as SettingsIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from 'react-router-dom'; // ✅ useLocation اضافه شد
 import { UserContext } from "../App";
@@ -254,6 +255,13 @@ function MainLayout({ children }) {
                         <ListItemButton onClick={() => navigate('/financials')} selected={location.pathname === '/financials'}>
                             <ListItemIcon><FinancialIcon /></ListItemIcon>
                             <ListItemText primary="امور مالی" />
+                        </ListItemButton>
+                    </ListItem>
+
+                    <ListItem disablePadding>
+                        <ListItemButton onClick={() => navigate('/settings')}>
+                            <ListItemIcon><SettingsIcon /></ListItemIcon>
+                            <ListItemText primary="تنظیمات سیستم" />
                         </ListItemButton>
                     </ListItem>
 

@@ -95,23 +95,41 @@ function AgencyFinancialsPage() {
 
     // --- هندلرهای حقوق ---
     const handleCreateSalary = async () => {
+        // اعتبارسنجی اولیه
+        if (!salaryForm.personnel || !salaryForm.amount) {
+            enqueueSnackbar('لطفاً پرسنل و مبلغ را مشخص کنید.', { variant: 'warning' });
+            return;
+        }
+
         setActionLoading(true);
         try {
             const data = {
-                personnel: salaryForm.personnel,
+                personnel: salaryForm.personnel, // مطمئن شوید این فقط ID است
                 amount: salaryForm.amount,
                 description: salaryForm.description,
+                // تبدیل تاریخ به رشته میلادی استاندارد (YYYY-MM-DD)
                 payment_date: salaryForm.date.locale('en').format('YYYY-MM-DD')
             };
+
+            console.log("Sending Salary Data:", data); // برای دیباگ در کنسول
+
             await createSalary(data);
-            enqueueSnackbar('حقوق ثبت شد', { variant: 'success' });
+            enqueueSnackbar('حقوق با موفقیت ثبت شد', { variant: 'success' });
             setOpenSalaryModal(false);
             fetchData();
             // ریست فرم
             setSalaryForm({ personnel: '', amount: '', date: moment(), description: '' });
         } catch (err) {
-            console.error(err);
-            enqueueSnackbar('خطا در ثبت حقوق', { variant: 'error' });
+            console.error("Salary Error:", err.response?.data || err);
+
+            // نمایش خطای دقیق سرور به کاربر
+            let errorMsg = 'خطا در ثبت حقوق.';
+            if (err.response && err.response.data) {
+                errorMsg = Object.entries(err.response.data)
+                    .map(([key, val]) => `${key}: ${val}`)
+                    .join('\n');
+            }
+            enqueueSnackbar(errorMsg, { variant: 'error' });
         } finally {
             setActionLoading(false);
         }

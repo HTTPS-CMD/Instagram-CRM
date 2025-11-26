@@ -178,5 +178,31 @@ export const analyzeProjectAI = (projectId) => {
   return apiClient.post(`/api/v1/projects/${projectId}/ai-analysis/`);
 };
 
+// --- ✅ مدیریت تنظیمات سیستم (Admin Settings) ---
+
+// 1. پکیج‌ها
+export const getPackages = () => apiClient.get('/api/v1/packages/');
+export const createPackage = (data) => apiClient.post('/api/v1/packages/', data);
+export const updatePackage = (id, data) => apiClient.patch(`/api/v1/packages/${id}/`, data);
+export const deletePackage = (id) => apiClient.delete(`/api/v1/packages/${id}/`);
+
+// 2. روش‌های پرداخت
+export const getPaymentMethods = () => apiClient.get('/api/v1/payment-methods/');
+export const createPaymentMethod = (data) => apiClient.post('/api/v1/payment-methods/', data);
+export const updatePaymentMethod = (id, data) => apiClient.patch(`/api/v1/payment-methods/${id}/`, data);
+export const deletePaymentMethod = (id) => apiClient.delete(`/api/v1/payment-methods/${id}/`);
+
+// 3. اطلاعات آژانس
+export const getAgencyInfo = () => apiClient.get('/api/v1/agency-info/');
+export const updateAgencyInfo = (id, data) => {
+    return apiClient.patch(`/api/v1/agency-info/${id}/`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
+export const createAgencyInfo = (data) => {
+    return apiClient.post('/api/v1/agency-info/', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
 
 export default apiClient;

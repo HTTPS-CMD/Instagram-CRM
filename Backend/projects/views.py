@@ -1,6 +1,7 @@
 # backend/projects/views.py
 import openpyxl
-import google.generativeai as genai
+import requests
+import json
 from django.http import HttpResponse
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
@@ -14,7 +15,8 @@ from .models import (
     Project, Scenario, CalendarEvent, WeeklyReport,
     ProjectFile, ProjectPayment, ProjectExpense, Notification,
     SalaryPayment, GeneralExpense, ScenarioComment, ActivityLog,
-    ChatRoom, ChatMessage
+    ChatRoom, ChatMessage,
+    PaymentMethod, AgencyInfo,Package
 )
 
 # ایمپورت سریالایزرها
@@ -24,8 +26,12 @@ from .serializers import (
     ProjectFileSerializer, ProjectPaymentSerializer, ProjectExpenseSerializer,
     NotificationSerializer, SalaryPaymentSerializer, GeneralExpenseSerializer,
     ScenarioCommentSerializer, ActivityLogSerializer,
-    ChatRoomSerializer, ChatMessageSerializer
+    ChatRoomSerializer, ChatMessageSerializer,
+    PaymentMethodSerializer, AgencyInfoSerializer,PackageSerializer
 )
+
+BOXAPI_USERNAME = "mhrshdbrya"
+BOXAPI_PASSWORD = "uhUgmZyBPGhS"
 
 
 # --- Permissions (سطح دسترسی) ---
@@ -486,7 +492,6 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
         room.save()
 
 
-# ✅ کلاس تحلیل هوشمند (نسخه مقاوم در برابر خطا)
 class ProjectAIAnalysisView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -496,51 +501,83 @@ class ProjectAIAnalysisView(APIView):
             try:
                 project = Project.objects.get(pk=project_pk)
             except Project.DoesNotExist:
-                return Response({"error": "پروژه یافت نشد."}, status=404)
+                return Response({"error": "Project not found"}, status=404)
 
-            # 2. بررسی گزارش‌ها
+            # 2. ساخت پرامپت از گزارش‌ها
             reports = WeeklyReport.objects.filter(project=project).order_by('week_number')
+            prompt_text = f"نام پروژه: {project.project_name}\nهدف ماهانه: {project.monthly_post_goal} پست\nگزارش‌ها:\n"
+
             if not reports.exists():
-                return Response({"analysis": "هنوز هیچ گزارش هفتگی ثبت نشده است. لطفاً ابتدا گزارش‌ها را وارد کنید."},
-                                status=200)
+                return Response({"analysis": "هنوز گزارشی ثبت نشده است."}, status=200)
 
-            # 3. تلاش برای استفاده از هوش مصنوعی
-            try:
-                import google.generativeai as genai
+            for r in reports:
+                prompt_text += f"- هفته {r.week_number}: {r.report_text}\n"
 
-                # کلید را اینجا بگذارید
-                GOOGLE_API_KEY = "AIzaSyCZEdRVSlYnbwx7ZOox6kVDI2UmZfWaATQ"
+            prompt_text += "\nلطفاً نقاط قوت، ضعف و برنامه ماه بعد را خلاصه بگو."
 
-                if not GOOGLE_API_KEY or GOOGLE_API_KEY == "AIzaSyCZEdRVSlYnbwx7ZOox6kVDI2UmZfWaATQ":
-                    raise ValueError("API Key is missing")
+            # 3. ارسال درخواست به BoxAPI (طبق مستندات شما)
+            url = "https://ai.boxapi.ir/api/gpt-5"  # یا gpt-3.5-turbo یا gpt-5 (بسته به اشتراک شما)
 
-                genai.configure(api_key=GOOGLE_API_KEY)
+            payload = {
+                "messages": [
+                    {"role": "system", "content": "You are a helpful marketing assistant."},
+                    {"role": "user", "content": prompt_text}
+                ]
+            }
 
-                # ساخت پرامپت
-                prompt = f"تحلیل پروژه {project.project_name} با هدف {project.monthly_post_goal} پست:\n"
-                for r in reports:
-                    prompt += f"- هفته {r.week_number}: {r.report_text}\n"
+            # احراز هویت و ارسال
+            response = requests.post(
+                url,
+                json=payload,
+                auth=(BOXAPI_USERNAME, BOXAPI_PASSWORD)
+            )
 
-                prompt += "\nلطفاً نقاط قوت، ضعف و پیشنهاد استراتژیک ماه بعد را خلاصه بگو."
+            if response.ok:
+                data = response.json()
+                # گرفتن متن پاسخ از ساختار جیسون BoxAPI
+                analysis_text = data.get("response", "پاسخی دریافت نشد.")
 
-                model = genai.GenerativeModel('gemini-pro')
-                response = model.generate_content(prompt)
+                # نمایش هزینه مصرف شده در کنسول سرور (اختیاری)
+                print(f"💰 Cost: {data.get('cost')}")
 
-                return Response({"analysis": response.text})
-
-            except ImportError:
-                print("Error: google-generativeai package is not installed.")
-                return Response(
-                    {"analysis": "⚠️ کتابخانه هوش مصنوعی نصب نیست. لطفاً پکیج google-generativeai را نصب کنید."},
-                    status=200)
-
-            except Exception as ai_error:
-                print(f"AI Error: {ai_error}")
-                # در صورت خرابی AI، پیام دوستانه بفرست نه ارور 500
-                return Response(
-                    {"analysis": f"متاسفانه هوش مصنوعی در دسترس نیست ({str(ai_error)}). لطفاً بعداً تلاش کنید."},
-                    status=200)
+                return Response({"analysis": analysis_text})
+            else:
+                print(f"BoxAPI Error: {response.status_code} - {response.text}")
+                return Response({"analysis": f"خطا در دریافت پاسخ از هوش مصنوعی: {response.text}"}, status=500)
 
         except Exception as e:
             print(f"Server Error: {e}")
-            return Response({"error": "خطای غیرمنتظره در سرور."}, status=500)
+            return Response({"analysis": f"خطای داخلی سرور: {str(e)}"}, status=500)
+
+
+# ✅ ViewSets تنظیمات سیستم (اصلاح شده برای دسترسی مشاهده همگانی)
+class PackageViewSet(viewsets.ModelViewSet):
+    serializer_class = PackageSerializer
+    queryset = Package.objects.all()
+
+    def get_permissions(self):
+        # لیست و جزئیات برای همه آزاد است (تا در دراپ‌داون نمایش داده شود)
+        if self.action in ['list', 'retrieve']:
+            return [permissions.IsAuthenticated()]
+        # ساخت و ویرایش فقط برای ادمین
+        return [permissions.IsAuthenticated(), IsAdminUser()]
+
+
+class PaymentMethodViewSet(viewsets.ModelViewSet):
+    serializer_class = PaymentMethodSerializer
+    queryset = PaymentMethod.objects.all()
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), IsAdminUser()]
+
+
+class AgencyInfoViewSet(viewsets.ModelViewSet):
+    serializer_class = AgencyInfoSerializer
+    queryset = AgencyInfo.objects.all()
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), IsAdminUser()]

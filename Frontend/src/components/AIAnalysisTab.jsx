@@ -38,7 +38,7 @@ function AIAnalysisTab({ projectId }) {
                 >
                     <RobotIcon sx={{ fontSize: 80, color: '#00e676', mb: 2 }} />
                     <Typography variant="h4" fontWeight="bold" textAlign={'center'} gutterBottom>دستیار هوشمند تحلیلگر</Typography>
-                    <Typography variant="body1" sx={{ opacity: 0.7, mb: 4, maxWidth: 600, mx: 'auto' }}>
+                    <Typography variant="body1" sx={{ opacity: 0.7, mb: 4, maxWidth: 600, mx: 'auto',textAlign:'center' }}>
                         من تمام گزارش‌های هفتگی پرسنل را می‌خوانم، عملکرد پیج را بررسی می‌کنم و یک برنامه استراتژیک دقیق برای ماه آینده به شما می‌دهم.
                     </Typography>
 

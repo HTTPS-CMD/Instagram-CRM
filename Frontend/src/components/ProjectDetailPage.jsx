@@ -150,6 +150,18 @@ function ProjectDetailPage() {
 
         setProject(projectResponse.data);
 
+        if (isAdmin) {
+            try {
+                const usersRes = await getUsers();
+                const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data.results || []);
+                setWriters(allUsers.filter(u => u.role === 'writer'));
+                setVideographers(allUsers.filter(u => u.role === 'videographer'));
+                setEditors(allUsers.filter(u => u.role === 'editor'));
+                setDesigners(allUsers.filter(u => u.role === 'designer'));
+                setSocialAdmins(allUsers.filter(u => u.role === 'social_admin'));
+            } catch (uErr) { console.error("Error fetching users:", uErr); }
+        }
+
         try {
             const usersRes = await getUsers();
             const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data.results || []);
@@ -174,7 +186,7 @@ function ProjectDetailPage() {
       }
     };
     fetchProjectData();
-  }, [projectId]);
+  }, [projectId, isAdmin]);
 
   const handleOpenEditModal = () => {
       setEditFormData({
