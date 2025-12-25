@@ -1,11 +1,12 @@
 // src/components/ScenarioComments.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Paper, Avatar, Stack, CircularProgress } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Paper, Avatar, Stack, CircularProgress, useTheme, alpha } from '@mui/material';
 import { Send as SendIcon, Person as PersonIcon } from '@mui/icons-material';
 import { getScenarioComments, createScenarioComment } from '../api';
 import moment from 'jalali-moment';
 
 function ScenarioComments({ scenarioId, currentUser }) {
+    const theme = useTheme(); // ✅ استفاده از تم
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [loading, setLoading] = useState(true);
@@ -23,7 +24,6 @@ function ScenarioComments({ scenarioId, currentUser }) {
         try {
             const response = await getScenarioComments(scenarioId);
             setComments(response.data);
-            // فقط بار اول اسکرول کن، در رفرش‌های بعدی مزاحم نشو
             if (loading) scrollToBottom();
         } catch (error) {
             console.error("Error fetching comments", error);
@@ -47,7 +47,6 @@ function ScenarioComments({ scenarioId, currentUser }) {
                 text: newComment
             });
             setNewComment('');
-            // بعد از ارسال، بلافاصله لیست را آپدیت کن و اسکرول کن
             const response = await getScenarioComments(scenarioId);
             setComments(response.data);
             scrollToBottom();
@@ -68,7 +67,7 @@ function ScenarioComments({ scenarioId, currentUser }) {
     if (loading) return <Box sx={{display:'flex', justifyContent:'center', p:2}}><CircularProgress size={20} /></Box>;
 
     return (
-        <Box sx={{ mt: 3, borderTop: '1px solid rgba(255,255,255,0.1)', pt: 2 }}>
+        <Box sx={{ mt: 3, borderTop: `1px solid ${theme.palette.divider}`, pt: 2 }}>
             <Typography variant="subtitle2" gutterBottom color="primary" fontWeight="bold">💬 گفتگو و اصلاحات</Typography>
 
             {/* لیست پیام‌ها */}
@@ -77,13 +76,14 @@ function ScenarioComments({ scenarioId, currentUser }) {
                 overflowY: 'auto',
                 p: 2,
                 mb: 2,
-                bgcolor: 'rgba(0,0,0,0.2)', // پس‌زمینه تاریک چت
+                // ✅ پس‌زمینه داینامیک برای باکس چت
+                bgcolor: alpha(theme.palette.action.hover, 0.05),
                 borderRadius: 2,
-                border: '1px solid rgba(255,255,255,0.05)'
+                border: `1px solid ${theme.palette.divider}`
             }}>
                 {comments.length === 0 ? (
                     <Box sx={{height:'100%', display:'flex', alignItems:'center', justifyContent:'center', opacity:0.5}}>
-                        <Typography variant="caption">هنوز پیامی ثبت نشده است.</Typography>
+                        <Typography variant="caption" color="text.secondary">هنوز پیامی ثبت نشده است.</Typography>
                     </Box>
                 ) : (
                     comments.map((msg) => {
@@ -106,15 +106,18 @@ function ScenarioComments({ scenarioId, currentUser }) {
 
                                 <Paper sx={{
                                     p: 1.5, px: 2, mt: 0.5,
-                                    bgcolor: isMe ? 'primary.dark' : 'rgba(255,255,255,0.1)',
+                                    // ✅ رنگ حباب پیام (برای من رنگی، برای دیگران خاکستری)
+                                    bgcolor: isMe ? 'primary.main' : alpha(theme.palette.background.paper, 1),
+                                    color: isMe ? '#fff' : theme.palette.text.primary,
                                     borderRadius: 2,
-                                    borderTopRightRadius: isMe ? 0 : 2, // گوشه تیز برای پیام من
-                                    borderTopLeftRadius: isMe ? 2 : 0,  // گوشه تیز برای پیام دیگران
+                                    borderTopRightRadius: isMe ? 0 : 2,
+                                    borderTopLeftRadius: isMe ? 2 : 0,
                                     maxWidth: '80%',
-                                    position: 'relative'
+                                    position: 'relative',
+                                    border: isMe ? 'none' : `1px solid ${theme.palette.divider}`
                                 }}>
                                     <Typography variant="body2" sx={{whiteSpace:'pre-wrap', lineHeight: 1.6}}>{msg.text}</Typography>
-                                    <Typography variant="caption" sx={{display:'block', textAlign:'left', mt:0.5, opacity:0.5, fontSize:'0.6rem'}}>
+                                    <Typography variant="caption" sx={{display:'block', textAlign:'left', mt:0.5, opacity:0.7, fontSize:'0.6rem', color: isMe ? 'rgba(255,255,255,0.7)' : 'text.disabled'}}>
                                         {moment(msg.created_at).locale('fa').format('HH:mm')}
                                     </Typography>
                                 </Paper>
@@ -138,16 +141,28 @@ function ScenarioComments({ scenarioId, currentUser }) {
                     multiline
                     maxRows={3}
                     inputProps={{ style: { textAlign: 'right', direction: 'rtl' } }}
-                    sx={{ bgcolor: 'background.paper', borderRadius: 1 }}
+                    sx={{
+                        // ✅ استایل داینامیک اینپوت
+                        bgcolor: theme.palette.background.paper,
+                        borderRadius: 1,
+                        '& .MuiOutlinedInput-root': {
+                            '& fieldset': { borderColor: theme.palette.divider },
+                            '&:hover fieldset': { borderColor: theme.palette.text.primary }
+                        }
+                    }}
                 />
                 <IconButton
                     color="primary"
                     onClick={handleSend}
                     disabled={sending || !newComment.trim()}
-                    sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, borderRadius: 2, height: 40, width: 40 }}
+                    sx={{
+                        bgcolor: 'primary.main',
+                        color: '#fff',
+                        '&:hover': { bgcolor: 'primary.dark' },
+                        borderRadius: 2, height: 40, width: 40
+                    }}
                 >
                     {sending ? <CircularProgress size={20} color="inherit" /> : <SendIcon fontSize="small" sx={{ transform: 'rotate(180deg)' }} />}
-                    {/* آیکون ارسال در RTL باید بچرخد */}
                 </IconButton>
             </Stack>
         </Box>

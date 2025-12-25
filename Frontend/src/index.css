@@ -1,111 +1,20 @@
 /* src/index.css */
 body {
   margin: 0;
-  padding: 0;
-  direction: rtl !important; /* ✅ این تنها چیزی است که نیاز داریم */
+  /* فونت وزیر یا هر فونتی که دارید */
+  font-family: 'Vazir', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- ✅ استایل‌های سکسی نهایی تقویم جلالی --- */
-/* (این بخش‌ها می‌توانند بمانند چون مربوط به کامپوننت تقویم هستند) */
-.MuiInputLabel-root {
-    color: rgba(255, 255, 255, 0.7) !important;
+/* اگر اسکرول بار زیبا می‌خواهید */
+::-webkit-scrollbar {
+  width: 8px;
 }
-.MuiInputBase-root {
-    background-color: rgba(255, 255, 255, 0.09) !important;
-    border-radius: 8px !important;
+::-webkit-scrollbar-track {
+  background: #0f2027;
 }
-.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-    border-color: #90caf9 !important;
-    box-shadow: 0 0 5px #90caf9;
-}
-.MuiTextField-root {
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-.MuiTextField-root:hover {
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-}
-
-/* --- ❌❌❌ تمام هک‌های .MuiListItemText-root و .MuiTypography در اینجا حذف شدند --- */
-/* چون در فایل main.jsx به صورت اصولی پیاده‌سازی شدند */
-
-/* هدر روزها */
-.fc-col-header-cell {
-    background-color: rgba(61, 169, 252, 0.1);
-    padding: 10px 0 !important;
-    border: none !important;
-}
-.fc-col-header-cell-cushion {
-    color: #3da9fc;
-    font-weight: bold;
-    text-decoration: none !important;
-}
-
-/* دکمه‌های تقویم */
-.fc-button-primary {
-    background-color: #3da9fc !important;
-    border: none !important;
-    border-radius: 8px !important;
-    font-weight: bold !important;
-    padding: 8px 16px !important;
-    transition: all 0.3s ease !important;
-}
-.fc-button-primary:hover {
-    background-color: #0a7bc2 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(61, 169, 252, 0.4);
-}
-.fc-button-active {
-    background-color: #095c91 !important;
-}
-
-/* روز امروز */
-.fc-day-today {
-    background-color: rgba(61, 169, 252, 0.05) !important;
-}
-
-/* استایل رویدادها (کارت‌های رنگی) */
-.modern-event {
-    border-radius: 6px !important;
-    border-left-width: 4px !important; /* خط رنگی سمت چپ */
-    border-top: none !important;
-    border-right: none !important;
-    border-bottom: none !important;
-    padding: 2px 4px !important;
-    transition: transform 0.2s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 4px !important;
-}
-.modern-event:hover {
-    transform: scale(1.02);
-    filter: brightness(1.1);
-    cursor: pointer;
-    z-index: 10;
-}
-
-/* عنوان ماه */
-.fc-toolbar-title {
-    font-size: 1.5rem !important;
-    font-weight: 900 !important;
-    color: #fff; /* رنگ متن هدر در تم دارک */
-}
-
-/* حذف خطوط اضافه */
-.fc-scrollgrid {
-    border: none !important;
-}
-.fc td, .fc th {
-    border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-/* نمای لیست */
-.fc-list {
-    border-radius: 12px;
-    overflow: hidden;
-}
-.fc-list-event:hover td {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-}
-.fc-list-day-cushion {
-    background-color: rgba(61, 169, 252, 0.15) !important;
+::-webkit-scrollbar-thumb {
+  background: #3da9fc;
+  border-radius: 4px;
 }

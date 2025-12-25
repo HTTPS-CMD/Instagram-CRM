@@ -16,6 +16,7 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='client') # max_length را زیاد کردم
     full_name = models.CharField(max_length=255, blank=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    is_deleted = models.BooleanField(default=False, verbose_name="حذف شده")
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"

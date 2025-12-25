@@ -61,7 +61,10 @@ function LoginPage() {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            background: `linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)`, // تم تیره و شیک
+            // ✅ گرادینت داینامیک: در لایت مود روشن و در دارک مود تیره
+            background: theme.palette.mode === 'dark'
+                ? `linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)`
+                : `linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)`,
             position: 'relative',
             overflow: 'hidden'
         }}
@@ -104,10 +107,11 @@ function LoginPage() {
                 width: '100%',
                 maxWidth: 400,
                 borderRadius: 4,
-                bgcolor: alpha('#fff', 0.05), // شیشه‌ای تیره
+                // ✅ پس‌زمینه شیشه‌ای داینامیک
+                bgcolor: alpha(theme.palette.background.paper, 0.7),
                 backdropFilter: 'blur(20px)',
-                border: `1px solid ${alpha('#fff', 0.1)}`,
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                border: `1px solid ${theme.palette.divider}`,
+                boxShadow: theme.shadows[10],
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -119,13 +123,13 @@ function LoginPage() {
                     m: 1, mb: 2,
                     bgcolor: 'primary.main',
                     width: 60, height: 60,
-                    boxShadow: `0 0 20px ${theme.palette.primary.main}`
+                    boxShadow: `0 0 20px ${alpha(theme.palette.primary.main, 0.5)}`
                 }}
             >
                 <LockIcon fontSize="large" />
             </Avatar>
 
-            <Typography component="h1" variant="h5" fontWeight="bold" color="white" gutterBottom>
+            <Typography component="h1" variant="h5" fontWeight="bold" color="text.primary" gutterBottom>
                 ورود به پنل مدیریت
             </Typography>
             <Typography variant="body2" color="text.secondary" mb={4}>
@@ -151,15 +155,17 @@ function LoginPage() {
                                 <PersonIcon color="primary" />
                             </InputAdornment>
                         ),
-                        style: { color: '#fff' } // رنگ متن سفید
+                        // ✅ رنگ متن اینپوت داینامیک شد (حذف color: white ثابت)
+                        style: { color: theme.palette.text.primary }
                     }}
                     sx={{
+                        // ✅ استایل‌های داینامیک برای بوردر و لیبل
                         '& .MuiOutlinedInput-root': {
-                            '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                            '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                            '& fieldset': { borderColor: alpha(theme.palette.text.primary, 0.2) },
+                            '&:hover fieldset': { borderColor: alpha(theme.palette.text.primary, 0.5) },
                             '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main },
                         },
-                        '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
+                        '& .MuiInputLabel-root': { color: theme.palette.text.secondary },
                         '& .MuiInputLabel-root.Mui-focused': { color: theme.palette.primary.main }
                     }}
                 />
@@ -186,21 +192,22 @@ function LoginPage() {
                                 <IconButton
                                     onClick={() => setShowPassword(!showPassword)}
                                     edge="end"
-                                    sx={{ color: 'rgba(255,255,255,0.5)' }}
+                                    sx={{ color: theme.palette.text.secondary }}
                                 >
                                     {showPassword ? <VisibilityOff /> : <Visibility />}
                                 </IconButton>
                             </InputAdornment>
                         ),
-                        style: { color: '#fff' }
+                        // ✅ رنگ متن اینپوت داینامیک شد
+                        style: { color: theme.palette.text.primary }
                     }}
                     sx={{
                         '& .MuiOutlinedInput-root': {
-                            '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                            '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                            '& fieldset': { borderColor: alpha(theme.palette.text.primary, 0.2) },
+                            '&:hover fieldset': { borderColor: alpha(theme.palette.text.primary, 0.5) },
                             '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main },
                         },
-                        '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
+                        '& .MuiInputLabel-root': { color: theme.palette.text.secondary },
                         '& .MuiInputLabel-root.Mui-focused': { color: theme.palette.primary.main }
                     }}
                 />
@@ -223,6 +230,7 @@ function LoginPage() {
                         fontSize: '1.1rem', fontWeight: 'bold', borderRadius: 3,
                         background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
                         boxShadow: `0 5px 15px ${alpha(theme.palette.primary.main, 0.4)}`,
+                        color: '#fff', // متن دکمه همیشه سفید باشد (چون دکمه رنگی است)
                         '&:hover': {
                             background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
                             transform: 'translateY(-2px)',
@@ -238,7 +246,7 @@ function LoginPage() {
         </Paper>
 
         {/* کپی‌رایت */}
-        <Typography variant="caption" sx={{ position: 'absolute', bottom: 20, color: 'rgba(255,255,255,0.3)' }}>
+        <Typography variant="caption" sx={{ position: 'absolute', bottom: 20, color: theme.palette.text.secondary, opacity: 0.7 }}>
             © 2025 loremipsum.ads Management System
         </Typography>
     </Box>

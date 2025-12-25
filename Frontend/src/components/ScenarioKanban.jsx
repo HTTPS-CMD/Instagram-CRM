@@ -1,9 +1,10 @@
 // src/components/ScenarioKanban.jsx
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Box, Paper, Typography, Chip, Stack, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography, Chip, Stack, CircularProgress, useTheme, alpha } from '@mui/material';
 import { getScenarios, updateScenario } from '../api';
 import { useSnackbar } from 'notistack';
+import { MovieCreation as ReelsIcon, HistoryEdu as StoryIcon } from '@mui/icons-material';
 
 const COLUMNS = {
     idea: { title: 'ایده اولیه', color: '#ff9800' },
@@ -14,6 +15,7 @@ const COLUMNS = {
 };
 
 function ScenarioKanban({ projectId }) {
+    const theme = useTheme(); // ✅ استفاده از تم
     const [scenarios, setScenarios] = useState([]);
     const [loading, setLoading] = useState(true);
     const { enqueueSnackbar } = useSnackbar();
@@ -38,32 +40,26 @@ function ScenarioKanban({ projectId }) {
         const { source, destination, draggableId } = result;
 
         if (source.droppableId !== destination.droppableId) {
-            // آپدیت لوکال (برای سرعت نمایش)
             const updatedScenarios = scenarios.map(s =>
                 s.id.toString() === draggableId ? { ...s, status: destination.droppableId } : s
             );
             setScenarios(updatedScenarios);
 
-            // آپدیت سرور
             try {
                 await updateScenario(draggableId, { status: destination.droppableId }, projectId);
                 enqueueSnackbar('وضعیت سناریو تغییر کرد', { variant: 'success' });
             } catch (err) {
                 enqueueSnackbar('خطا در تغییر وضعیت', { variant: 'error' });
-                fetchScenarios(); // برگرداندن به حالت قبل
+                fetchScenarios();
             }
         }
     };
 
-    // ✅ تابع اصلاح شده برای ترکیب استایل‌ها (حل مشکل باگ جابجایی)
     const getItemStyle = (isDragging, draggableStyle) => ({
-        // استایل‌های پیش‌فرض کتابخانه (مختصات حرکت)
         ...draggableStyle,
-        // اگر در حال درگ است، هم حرکت کند و هم کمی بچرخد
         transform: isDragging
             ? `${draggableStyle.transform} rotate(3deg)`
             : draggableStyle.transform,
-        // تنظیمات ظاهری
         userSelect: 'none',
         marginBottom: 8,
     });
@@ -86,15 +82,17 @@ function ScenarioKanban({ projectId }) {
                             sx={{
                                 p: 2,
                                 height: '100%',
-                                bgcolor: 'rgba(255,255,255,0.03)',
+                                // ✅ رنگ پس‌زمینه ستون (شیشه‌ای داینامیک)
+                                bgcolor: alpha(theme.palette.background.paper, 0.4),
                                 borderTop: `4px solid ${column.color}`,
                                 display: 'flex',
-                                flexDirection: 'column'
+                                flexDirection: 'column',
+                                border: `1px solid ${theme.palette.divider}`
                             }}
                         >
-                            <Typography variant="subtitle1" fontWeight="bold" mb={2} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="subtitle1" fontWeight="bold" mb={2} sx={{ display: 'flex', justifyContent: 'space-between', color: theme.palette.text.primary }}>
                                 {column.title}
-                                <Chip label={column.items.length} size="small" sx={{ bgcolor: column.color, color: 'white', height: 20 }} />
+                                <Chip label={column.items.length} size="small" sx={{ bgcolor: column.color, color: '#fff', height: 20, fontWeight:'bold' }} />
                             </Typography>
 
                             <Droppable droppableId={column.id}>
@@ -105,7 +103,8 @@ function ScenarioKanban({ projectId }) {
                                         sx={{
                                             flexGrow: 1,
                                             minHeight: 400,
-                                            bgcolor: snapshot.isDraggingOver ? 'rgba(255,255,255,0.05)' : 'transparent',
+                                            // ✅ هایلایت هنگام درگ کردن
+                                            bgcolor: snapshot.isDraggingOver ? alpha(theme.palette.action.hover, 0.1) : 'transparent',
                                             borderRadius: 2,
                                             transition: 'background-color 0.2s',
                                             p: 1
@@ -118,24 +117,45 @@ function ScenarioKanban({ projectId }) {
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         {...provided.dragHandleProps}
-                                                        // ✅ استفاده از تابع استایل اصلاح شده در پراپ style
                                                         style={getItemStyle(
                                                             snapshot.isDragging,
                                                             provided.draggableProps.style
                                                         )}
                                                         sx={{
                                                             p: 2,
-                                                            bgcolor: 'background.paper',
+                                                            // ✅ رنگ کارت (داینامیک)
+                                                            bgcolor: theme.palette.background.paper,
+                                                            color: theme.palette.text.primary,
                                                             opacity: snapshot.isDragging ? 0.9 : 1,
-                                                            boxShadow: snapshot.isDragging ? 10 : 1
+                                                            boxShadow: snapshot.isDragging ? 10 : 2,
+                                                            borderLeft: item.scenario_type === 'story' ? `3px solid ${theme.palette.warning.main}` : `3px solid ${theme.palette.secondary.main}`,
+                                                            border: `1px solid ${theme.palette.divider}`
                                                         }}
                                                     >
                                                         <Typography variant="body2" fontWeight="bold" gutterBottom>
                                                             {item.title}
                                                         </Typography>
-                                                        <Typography variant="caption" display="block" color="text.secondary" noWrap>
+                                                        <Typography variant="caption" display="block" color="text.secondary" noWrap mb={1.5}>
                                                             {item.summary || 'بدون خلاصه'}
                                                         </Typography>
+
+                                                        {/* ✅ اضافه کردن نوع سناریو (ریلز/استوری) در پایین کارت */}
+                                                        <Stack direction="row" justifyContent="flex-end">
+                                                            <Chip
+                                                                icon={item.scenario_type === 'story' ? <StoryIcon sx={{fontSize: 14}}/> : <ReelsIcon sx={{fontSize: 14}}/>}
+                                                                label={item.scenario_type === 'story' ? 'استوری' : 'ریلز'}
+                                                                size="small"
+                                                                variant="outlined"
+                                                                sx={{
+                                                                    height: 20,
+                                                                    fontSize: '0.65rem',
+                                                                    // ✅ رنگ چیپ بر اساس نوع سناریو و تم
+                                                                    color: item.scenario_type === 'story' ? theme.palette.warning.main : theme.palette.secondary.main,
+                                                                    borderColor: item.scenario_type === 'story' ? alpha(theme.palette.warning.main, 0.5) : alpha(theme.palette.secondary.main, 0.5),
+                                                                    bgcolor: item.scenario_type === 'story' ? alpha(theme.palette.warning.main, 0.05) : alpha(theme.palette.secondary.main, 0.05)
+                                                                }}
+                                                            />
+                                                        </Stack>
                                                     </Paper>
                                                 )}
                                             </Draggable>

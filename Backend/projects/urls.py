@@ -4,6 +4,10 @@ from rest_framework_nested import routers
 from .views import *
 
 standard_router = routers.DefaultRouter()
+# ✅ حل مشکل ارور ValueError در پایتون ۳.۱۳ و جنگو ۵
+# این خط باعث می‌شود روتر تلاش نکند دوباره فرمت‌ها را ثبت کند
+standard_router.include_format_suffixes = False
+
 standard_router.register(r'projects', ProjectViewSet, basename='project')
 standard_router.register(r'weekly-reports', WeeklyReportViewSet, basename='weekly-report-detail')
 standard_router.register(r'notifications', NotificationViewSet, basename='notifications')
@@ -19,14 +23,33 @@ standard_router.register(r'payment-methods', PaymentMethodViewSet, basename='pay
 standard_router.register(r'agency-info', AgencyInfoViewSet, basename='agency-info')
 standard_router.register(r'extra-services', ExtraServiceViewSet, basename='extra-services')
 standard_router.register(r'service-requests', ServiceRequestViewSet, basename='service-requests')
+standard_router.register(r'agency-files', AgencyFileViewSet, basename='agency-files')
+standard_router.register(r'target-audiences', TargetAudienceViewSet, basename='target-audiences')
+standard_router.register(r'global-file-comments', FileCommentViewSet, basename='file-comments')
+standard_router.register(r'sticky-notes', StickyNoteViewSet, basename='sticky-notes')
+standard_router.register(r'automation-rules', WorkflowRuleViewSet, basename='automation-rules')
+standard_router.register(r'time-logs', TimeLogViewSet, basename='time-logs')
+standard_router.register(r'shared-links', SharedLinkViewSet, basename='shared-links')
+standard_router.register(r'dashboard-config', DashboardConfigViewSet, basename='dashboard-config')
+standard_router.register(r'leads', LeadViewSet, basename='leads')
+
+# ✅ این خط اضافه شد تا آدرس /api/v1/tasks/ فعال شود (برای کارتابل پرسنل)
+standard_router.register(r'tasks', TaskViewSet, basename='all-tasks')
+
 
 projects_router = routers.NestedDefaultRouter(standard_router, r'projects', lookup='project')
+# ✅ حل مشکل ارور برای روتر تو در تو
+projects_router.include_format_suffixes = False
+
 projects_router.register(r'scenarios', ScenarioViewSet, basename='project-scenarios')
 projects_router.register(r'calendar-events', CalendarEventViewSet, basename='project-calendar-events')
 projects_router.register(r'weekly-reports', WeeklyReportViewSet, basename='project-weekly-reports')
 projects_router.register(r'files', ProjectFileViewSet, basename='project-files')
 projects_router.register(r'payments', ProjectPaymentViewSet, basename='project-payments')
 projects_router.register(r'expenses', ProjectExpenseViewSet, basename='project-expenses')
+# projects_router.register(r'tasks', TaskViewSet, basename='project-tasks')
+projects_router.register(r'tasks', TaskViewSet, basename='task')
+# projects_router.register(r'comments-on-files', FileCommentViewSet, basename='file-comments')
 
 
 urlpatterns = [
@@ -35,4 +58,8 @@ urlpatterns = [
     path('dashboard-stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
     path('projects/<int:project_pk>/export-financials/', ProjectFinancialExportView.as_view(), name='export-financials'),
     path('projects/<int:project_pk>/ai-analysis/', ProjectAIAnalysisView.as_view(), name='ai-analysis'),
+    path('projects/<int:project_pk>/generate-scenario/', ProjectScenarioGenerationView.as_view(), name='generate-scenario'),
+    path('generate-audience-ai/', TargetAudienceAIView.as_view(), name='generate-audience-ai'),
+    path('global-search/', GlobalSearchView.as_view(), name='global-search'),
+    path('public/share/<uuid:token>/', PublicFileView.as_view(), name='public-share-view'),
 ]

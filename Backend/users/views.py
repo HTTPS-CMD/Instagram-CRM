@@ -1,7 +1,7 @@
 # backend/users/views.py
 from django.shortcuts import render
-# ✅ generics در خط زیر اضافه شد
 from rest_framework import viewsets, permissions, status, generics
+from rest_framework.decorators import action  # ✅ این خط جا افتاده بود
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -27,11 +27,47 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
 
     def get_queryset(self):
-        queryset = CustomUser.objects.all().order_by('-date_joined')
+        # ✅ فقط کاربران فعال (حذف نشده)
+        queryset = CustomUser.objects.filter(is_deleted=False).order_by('-date_joined')
         role = self.request.query_params.get('role')
         if role:
             queryset = queryset.filter(role=role)
         return queryset
+
+    # ✅ حذف نرم
+    def perform_destroy(self, instance):
+        instance.is_active = False  # غیرفعال کردن لاگین
+        instance.is_deleted = True
+        instance.save()
+
+    # ✅ اکشن ۱: مشاهده سطل زباله
+    @action(detail=False, methods=['get'])
+    def trash(self, request):
+        deleted_users = CustomUser.objects.filter(is_deleted=True).order_by('-id')
+        serializer = UserSerializer(deleted_users, many=True)
+        return Response(serializer.data)
+
+    # ✅ اکشن ۲: بازگردانی کاربر
+    @action(detail=True, methods=['post'])
+    def restore(self, request, pk=None):
+        try:
+            user = CustomUser.objects.get(pk=pk)
+            user.is_deleted = False
+            user.is_active = True
+            user.save()
+            return Response({'status': 'restored'})
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
+    # ✅ اکشن ۳: حذف دائم
+    @action(detail=True, methods=['delete'])
+    def hard_delete(self, request, pk=None):
+        try:
+            user = CustomUser.objects.get(pk=pk)
+            user.delete()
+            return Response({'status': 'deleted permanently'})
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
 
 
 # ✅ API مشاهده و ویرایش پروفایل من
@@ -43,7 +79,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-# ✅ API تغییر رمز عبور
+# ✅ API تغییر رمز
 class ChangePasswordView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
