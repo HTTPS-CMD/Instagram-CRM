@@ -3,14 +3,14 @@ import openpyxl
 import requests
 import json
 from django.http import HttpResponse
-from rest_framework import viewsets, permissions, filters, status # ✅ filters و status اضافه شد
+from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Sum, Q
 from rest_framework.permissions import AllowAny
-from django.shortcuts import get_object_or_404 # ✅ اضافه شد
-from django_filters.rest_framework import DjangoFilterBackend # ✅ اضافه شد
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 import time
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -28,7 +28,7 @@ from .models import (
 
 # ایمپورت سریالایزرها
 from .serializers import (
-    ProjectListSerializer, ProjectDetailSerializer, ProjectSerializer, # ✅ ProjectSerializer اضافه شد
+    ProjectListSerializer, ProjectDetailSerializer, ProjectSerializer,
     ScenarioSerializer, CalendarEventSerializer, WeeklyReportSerializer,
     ProjectFileSerializer, ProjectPaymentSerializer, ProjectExpenseSerializer,
     NotificationSerializer, SalaryPaymentSerializer, GeneralExpenseSerializer,
@@ -36,32 +36,28 @@ from .serializers import (
     ChatRoomSerializer, ChatMessageSerializer,
     PaymentMethodSerializer, AgencyInfoSerializer, PackageSerializer,
     ExtraServiceSerializer, ServiceRequestSerializer, GlobalCalendarEventSerializer, AgencyFileSerializer,
-    TargetAudienceSerializer, TaskSerializer, FileCommentSerializer, StickyNoteSerializer, WorkflowRuleSerializer, TimeLogSerializer, SharedLinkSerializer,
+    TargetAudienceSerializer, TaskSerializer, FileCommentSerializer, StickyNoteSerializer, WorkflowRuleSerializer,
+    TimeLogSerializer, SharedLinkSerializer,
     DashboardConfigSerializer, LeadSerializer
 )
 
 User = get_user_model()
 
-BOXAPI_USERNAME = "mhrshdbrya"
-BOXAPI_PASSWORD = "uhUgmZyBPGhS"
+# ✅ تنظیمات OpenRouter با مدل جدید شیائومی
+OPENROUTER_API_KEY = "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"
+# 🔹 مدل انتخاب شده: شیائومی (رایگان و سریع)
+OPENROUTER_MODEL = "xiaomi/mimo-v2-flash:free"
 
 
 # --- Permissions (سطح دسترسی) ---
 
 class IsAdminUser(permissions.BasePermission):
-    """
-    دسترسی فقط برای ادمین‌ها یا سوپریوزرها
-    """
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and (
-                    request.user.role == 'admin' or request.user.is_superuser)
+                request.user.role == 'admin' or request.user.is_superuser)
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
-    """
-    ادمین/سوپریوزر به همه چیز دسترسی دارد.
-    مشتری فقط به پروژه خودش دسترسی دارد.
-    """
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
 
@@ -76,9 +72,6 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 
 
 class IsProjectTeamMember(permissions.BasePermission):
-    """
-    دسترسی هوشمند برای اعضای تیم پروژه (نویسنده، ادیتور، فیلم‌بردار و ...)
-    """
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
 
@@ -149,11 +142,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated: return Project.objects.none()
 
-        base_qs = Project.objects.filter(is_deleted=False).select_related(
-            'client_user', 'selected_package', 'payment_method'
-        ).prefetch_related(
-            'writers', 'videographers', 'editors', 'designers', 'social_admins'
-        ).order_by('-id')
+        base_qs = Project.objects.filter(is_deleted=False).order_by('-id')
 
         if user.role == 'admin' or user.is_superuser:
             return base_qs
@@ -168,7 +157,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.is_deleted = True
         instance.save()
-        log_activity(self.request.user, 'حذف (موقت)', 'پروژه', f"پروژه {instance.project_name} به سطل زباله منتقل شد.", instance, self.request)
+        log_activity(self.request.user, 'حذف (موقت)', 'پروژه', f"پروژه {instance.project_name} به سطل زباله منتقل شد.",
+                     instance, self.request)
 
     @action(detail=False, methods=['get'])
     def trash(self, request):
@@ -182,7 +172,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(pk=pk)
             project.is_deleted = False
             project.save()
-            log_activity(request.user, 'بازگردانی', 'پروژه', f"پروژه {project.project_name} بازگردانی شد.", project, request)
+            log_activity(request.user, 'بازگردانی', 'پروژه', f"پروژه {project.project_name} بازگردانی شد.", project,
+                         request)
             return Response({'status': 'restored'})
         except Project.DoesNotExist:
             return Response({'error': 'Project not found'}, status=404)
@@ -191,7 +182,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def hard_delete(self, request, pk=None):
         try:
             project = Project.objects.get(pk=pk)
-            log_activity(request.user, 'حذف دائم', 'پروژه', f"پروژه {project.project_name} برای همیشه حذف شد.", None, request)
+            log_activity(request.user, 'حذف دائم', 'پروژه', f"پروژه {project.project_name} برای همیشه حذف شد.", None,
+                         request)
             project.delete()
             return Response({'status': 'deleted permanently'})
         except Project.DoesNotExist:
@@ -343,7 +335,9 @@ class DashboardStatsView(APIView):
         else:
             my_projects = Project.objects.filter(client_user=user)
             active_count = my_projects.filter(is_started=True).count()
-            total_paid = ProjectPayment.objects.filter(project__in=my_projects, is_paid=True).aggregate(sum=Sum('amount'))['sum'] or 0
+            total_paid = \
+            ProjectPayment.objects.filter(project__in=my_projects, is_paid=True).aggregate(sum=Sum('amount'))[
+                'sum'] or 0
             total_contract = my_projects.aggregate(sum=Sum('contract_amount'))['sum'] or 0
             total_due = total_contract - total_paid
 
@@ -453,7 +447,6 @@ class GlobalCalendarEventViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         if user.role != 'admin' and not user.is_superuser:
-            # اینجا می‌توانید چک کنید که کاربر عضو پروژه است یا نه
             pass
         serializer.save()
 
@@ -511,10 +504,12 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
         room.save()
 
 
+# ✅ ویو اصلاح شده با مدل شیائومی و قابلیت Reasoning
 class ProjectAIAnalysisView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, project_pk):
+        print(f"🔹 Start AI Analysis for project: {project_pk} using {OPENROUTER_MODEL}")
         try:
             project = get_object_or_404(Project, pk=project_pk)
             reports = WeeklyReport.objects.filter(project=project).order_by('week_number')
@@ -528,23 +523,39 @@ class ProjectAIAnalysisView(APIView):
 
             prompt_text += "\nلطفاً نقاط قوت، ضعف و برنامه ماه بعد را خلاصه بگو."
 
-            url = "https://ai.boxapi.ir/api/gpt-5"
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "http://localhost:3000",
+                "X-Title": "My CRM",
+            }
+            # ✅ اضافه کردن تنظیمات Reasoning طبق درخواست
             payload = {
+                "model": OPENROUTER_MODEL,
                 "messages": [
                     {"role": "system", "content": "You are a helpful marketing assistant."},
                     {"role": "user", "content": prompt_text}
-                ]
+                ],
+                "reasoning": {"enabled": True}  # فعال‌سازی استدلال برای این مدل خاص
             }
-            response = requests.post(url, json=payload, auth=(BOXAPI_USERNAME, BOXAPI_PASSWORD))
+
+            print(f"📡 Sending request to OpenRouter...")
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
+
+            print(f"📩 OpenRouter Response Status: {response.status_code}")
 
             if response.ok:
                 data = response.json()
-                analysis_text = data.get("response", "پاسخی دریافت نشد.")
+                analysis_text = data["choices"][0]["message"]["content"]
                 return Response({"analysis": analysis_text})
             else:
-                return Response({"analysis": f"خطا در دریافت پاسخ از هوش مصنوعی: {response.text}"}, status=500)
+                print(f"❌ OpenRouter Error: {response.text}")
+                return Response({"analysis": f"خطای هوش مصنوعی ({response.status_code}): {response.text}"},
+                                status=response.status_code)
 
         except Exception as e:
+            print(f"❌ Server Error: {str(e)}")
             return Response({"analysis": f"خطای داخلی سرور: {str(e)}"}, status=500)
 
 
@@ -614,10 +625,14 @@ class AgencyFileViewSet(viewsets.ModelViewSet):
         file = self.request.FILES['file']
         ext = file.name.split('.')[-1].lower()
         f_type = 'document'
-        if ext in ['jpg', 'jpeg', 'png', 'gif']: f_type = 'image'
-        elif ext in ['mp4', 'mov', 'avi']: f_type = 'video'
-        elif ext in ['pdf']: f_type = 'pdf'
-        elif ext in ['doc', 'docx', 'xls', 'xlsx']: f_type = 'office'
+        if ext in ['jpg', 'jpeg', 'png', 'gif']:
+            f_type = 'image'
+        elif ext in ['mp4', 'mov', 'avi']:
+            f_type = 'video'
+        elif ext in ['pdf']:
+            f_type = 'pdf'
+        elif ext in ['doc', 'docx', 'xls', 'xlsx']:
+            f_type = 'office'
         serializer.save(file_type=f_type)
 
 
@@ -629,10 +644,12 @@ class TargetAudienceViewSet(viewsets.ModelViewSet):
         return TargetAudience.objects.all().order_by('-created_at')
 
 
+# ✅ ویو اصلاح شده تولید سناریو با شیائومی و Reasoning
 class ProjectScenarioGenerationView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, project_pk):
+        print(f"🔹 Generating Scenario for project: {project_pk} using {OPENROUTER_MODEL}")
         try:
             project = get_object_or_404(Project, pk=project_pk)
             topic = request.data.get('topic', 'آزاد')
@@ -643,22 +660,35 @@ class ProjectScenarioGenerationView(APIView):
                 f"Write a Persian scenario. Output VALID JSON ONLY: {{'title': '', 'summary': '', 'full_script': ''}}"
             )
 
-            url = "https://ai.boxapi.ir/api/gpt-5"
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            # ✅ اضافه کردن تنظیمات Reasoning
             payload = {
+                "model": OPENROUTER_MODEL,
                 "messages": [
                     {"role": "system", "content": "You are a helpful assistant that outputs JSON only."},
                     {"role": "user", "content": prompt_text}
-                ]
+                ],
+                "reasoning": {"enabled": True}
             }
-            response = requests.post(url, json=payload, auth=(BOXAPI_USERNAME, BOXAPI_PASSWORD))
+
+            print(f"📡 Sending Scenario Request...")
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
+            print(f"📩 Response Status: {response.status_code}")
 
             if response.ok:
                 data = response.json()
-                ai_content = data.get("response", "")
+                ai_content = data["choices"][0]["message"]["content"]
+
+                # تمیزکاری JSON
                 if "```json" in ai_content:
                     ai_content = ai_content.split("```json")[1].split("```")[0].strip()
                 elif "```" in ai_content:
                     ai_content = ai_content.split("```")[1].split("```")[0].strip()
+
                 try:
                     return Response(json.loads(ai_content))
                 except json.JSONDecodeError:
@@ -668,11 +698,15 @@ class ProjectScenarioGenerationView(APIView):
                         "full_script": ai_content
                     })
             else:
-                return Response({"error": "خطا در ارتباط با هوش مصنوعی"}, status=500)
+                print(f"❌ Error: {response.text}")
+                return Response({"error": f"خطا در ارتباط با هوش مصنوعی: {response.text}"}, status=500)
+
         except Exception as e:
+            print(f"❌ Server Exception: {e}")
             return Response({"error": str(e)}, status=500)
 
 
+# ✅ ویو اصلاح شده تحلیل مخاطب با شیائومی و Reasoning
 class TargetAudienceAIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -687,62 +721,60 @@ class TargetAudienceAIView(APIView):
         )
 
         try:
-            url = "https://ai.boxapi.ir/api/gpt-5"
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            # ✅ اضافه کردن تنظیمات Reasoning
             payload = {
+                "model": OPENROUTER_MODEL,
                 "messages": [
                     {"role": "system", "content": "You are a marketing expert who speaks Persian and outputs JSON."},
                     {"role": "user", "content": prompt_text}
-                ]
+                ],
+                "reasoning": {"enabled": True}
             }
-            response = requests.post(url, json=payload, auth=(BOXAPI_USERNAME, BOXAPI_PASSWORD))
+
+            print(f"📡 Sending Target Audience Request...")
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
+            print(f"📩 Response Status: {response.status_code}")
 
             if response.ok:
                 data = response.json()
-                content = data.get("response", "")
+                content = data["choices"][0]["message"]["content"]
                 if "```json" in content:
                     content = content.split("```json")[1].split("```")[0].strip()
                 elif "```" in content:
                     content = content.split("```")[1].split("```")[0].strip()
                 return Response(json.loads(content))
             else:
-                return Response({"error": "AI Error"}, status=500)
+                print(f"❌ Error: {response.text}")
+                return Response({"error": f"AI Error: {response.text}"}, status=500)
         except Exception as e:
+            print(f"❌ Server Exception: {e}")
             return Response({"error": str(e)}, status=500)
 
 
-# ✅ ویو اصلی تسک (اصلاح شده)
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
     search_fields = ['title', 'description']
     ordering_fields = ['due_date', 'priority', 'created_at']
-    filterset_fields = ['status', 'priority', 'assigned_to', 'project']
+    filterset_fields = ['status', 'priority', 'assigned_to']
 
     def get_queryset(self):
-        user = self.request.user
         project_id = self.kwargs.get('project_pk')
-
-        # حالت ۱: درخواست برای تسک‌های یک پروژه خاص (از پنل پروژه)
         if project_id:
             return Task.objects.filter(project_id=project_id)
-
-        # حالت ۲: درخواست کلی (کارتابل پرسنل)
-        # ادمین همه را می‌بیند، بقیه فقط تسک‌های خودشان
-        if user.role == 'admin' or user.is_superuser:
-            return Task.objects.all().order_by('-created_at')
-
-        return Task.objects.filter(assigned_to=user).order_by('-created_at')
+        return Task.objects.all()
 
     def perform_create(self, serializer):
         project_id = self.kwargs.get('project_pk')
-
         if project_id:
-            # اگر از داخل پروژه تسک ساخته شد
             project = get_object_or_404(Project, pk=project_id)
             serializer.save(project=project)
         else:
-            # اگر از کارتابل ساخته شد (باید project در بادی درخواست باشد یا نال باشد)
             serializer.save()
 
 
@@ -758,31 +790,32 @@ class GlobalSearchView(APIView):
         user = request.user
         is_admin = user.role == 'admin' or user.is_superuser
 
-        # 1. Projects
         projects = Project.objects.filter(project_name__icontains=query, is_deleted=False)
         if not is_admin:
             projects = projects.filter(client_user=user)
         for p in projects[:5]:
-            results.append({"type": "project", "title": p.project_name, "subtitle": "پروژه", "link": f"/project/{p.id}"})
+            results.append(
+                {"type": "project", "title": p.project_name, "subtitle": "پروژه", "link": f"/project/{p.id}"})
 
-        # 2. Users
         if is_admin:
-            users = User.objects.filter(Q(username__icontains=query) | Q(full_name__icontains=query), is_deleted=False)[:5]
+            users = User.objects.filter(Q(username__icontains=query) | Q(full_name__icontains=query), is_deleted=False)[
+                    :5]
             for u in users:
-                results.append({"type": "user", "title": u.full_name or u.username, "subtitle": u.get_role_display(), "link": "/users"})
+                results.append({"type": "user", "title": u.full_name or u.username, "subtitle": u.get_role_display(),
+                                "link": "/users"})
 
-        # 3. Scenarios
         scenarios = Scenario.objects.filter(title__icontains=query)[:5]
         for s in scenarios:
             if is_admin or s.project.client_user == user:
-                results.append({"type": "scenario", "title": s.title, "subtitle": f"سناریو در {s.project.project_name}", "link": f"/project/{s.project.id}?tab=scenarios"})
+                results.append({"type": "scenario", "title": s.title, "subtitle": f"سناریو در {s.project.project_name}",
+                                "link": f"/project/{s.project.id}?tab=scenarios"})
 
-        # 4. Invoices
         if is_admin:
             payments = ProjectPayment.objects.filter(description__icontains=query)[:5]
             for pay in payments:
-                results.append({"type": "invoice", "title": f"فاکتور: {pay.description}", "subtitle": f"{pay.amount:,} تومان", "link": f"/project/{pay.project.id}?tab=financials"
-            })
+                results.append(
+                    {"type": "invoice", "title": f"فاکتور: {pay.description}", "subtitle": f"{pay.amount:,} تومان",
+                     "link": f"/project/{pay.project.id}?tab=financials"})
 
         return Response(results)
 
