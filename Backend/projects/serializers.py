@@ -1,6 +1,7 @@
 # backend/projects/serializers.py
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
+
 from .models import *
 
 User = get_user_model()
@@ -67,6 +68,68 @@ class ProjectSerializer(serializers.ModelSerializer):
     editors_details = UserMiniSerializer(source='editors', many=True, read_only=True)
     designers_details = UserMiniSerializer(source='designers', many=True, read_only=True)
     social_admins_details = UserMiniSerializer(source='social_admins', many=True, read_only=True)
+
+    status_text = serializers.CharField(source='get_status_display', read_only=True)
+    priority_text = serializers.CharField(source='get_priority_display', read_only=True)
+
+    # فرمت کردن تاریخ به شکل خوانا (اختیاری)
+    created_at_formatted = serializers.DateTimeField(source='created_at', format="%Y-%m-%d %H:%M", read_only=True)
+
+    status_label = serializers.CharField(source='get_status_display', read_only=True)
+    priority_label = serializers.CharField(source='get_priority_display', read_only=True)
+    type_label = serializers.CharField(source='get_project_type_display', read_only=True)
+
+    # ۲. تبدیل کلیدهای خارجی به اسم (مثلاً به جای ID=5، بنویسد "پکیج طلایی")
+    # فرض بر این است که در مدل شما رابطه ForeignKey با نام 'package' و 'payment_method' وجود دارد
+    package_name = serializers.CharField(source='package.title', default='---', read_only=True)
+    payment_method_title = serializers.CharField(source='payment_method.title', default='---', read_only=True)
+
+    # ۳. اطمینان از ارسال تاریخ شمسی (اگر تابعش را در مدل دارید)
+    # اگر ندارید، این خط را پاک کنید
+    created_at_jalali = serializers.CharField(source='get_created_at_jalali', read_only=True, default='')
+
+    # ۲. اطلاعات کارفرما (نام کامل)
+    client_name = serializers.SerializerMethodField()
+
+    # ۳. اطلاعات پکیج و پرداخت (کامل)
+    package_details = serializers.SerializerMethodField()
+    payment_method_details = serializers.SerializerMethodField()
+
+    # ۴. لیست اعضای تیم (نام‌ها به جای ID)
+    writers_names = serializers.StringRelatedField(source='writers', many=True)
+    editors_names = serializers.StringRelatedField(source='editors', many=True)
+    videographers_names = serializers.StringRelatedField(source='videographers', many=True)
+    designers_names = serializers.StringRelatedField(source='designers', many=True)
+    social_admins_names = serializers.StringRelatedField(source='social_admins', many=True)
+
+    class Meta:
+        model = Project
+        fields = '__all__'
+
+    def get_client_name(self, obj):
+        # اگر کارفرما وجود دارد، نام کامل یا نام کاربری‌اش را برگردان
+        if obj.client_user:
+            return obj.client_user.full_name or obj.client_user.username
+        return "نامشخص"
+
+    def get_package_details(self, obj):
+        if obj.selected_package:
+            return {
+                "id": obj.selected_package.id,
+                "title": obj.selected_package.title,
+                "price": obj.selected_package.price,
+                "description": obj.selected_package.description
+            }
+        return None
+
+    def get_payment_method_details(self, obj):
+        if obj.payment_method:
+            return {
+                "id": obj.payment_method.id,
+                "title": obj.payment_method.title,
+                "stages": obj.payment_method.stages
+            }
+        return None
 
     class Meta:
         model = Project
@@ -161,6 +224,7 @@ class GlobalCalendarEventSerializer(serializers.ModelSerializer):
 
 
 class WeeklyReportSerializer(serializers.ModelSerializer):
+    project_name = serializers.CharField(source='project.project_name', read_only=True)
     class Meta: model = WeeklyReport; fields = '__all__'; read_only_fields = ['project']
 
 
@@ -174,6 +238,7 @@ class ProjectPaymentSerializer(serializers.ModelSerializer):
 
 class ProjectExpenseSerializer(serializers.ModelSerializer):
     class Meta: model = ProjectExpense; fields = '__all__'; read_only_fields = ['project', 'created_at']
+    project_name = serializers.CharField(source='project.project_name', read_only=True)
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -211,8 +276,9 @@ class ChatRoomSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
 
     class Meta:
-        model = ChatRoom; fields = ['id', 'type', 'project', 'name', 'participants', 'last_message', 'avatar',
-                                    'updated_at']
+        model = ChatRoom;
+        fields = ['id', 'type', 'project', 'name', 'participants', 'last_message', 'avatar',
+                  'updated_at']
 
     def get_last_message(self, obj):
         last = obj.messages.order_by('-created_at').first()

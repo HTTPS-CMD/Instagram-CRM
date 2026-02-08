@@ -1,23 +1,16 @@
 // src/components/UnifiedCalendarPage.jsx
-import React, { useState, useEffect } from 'react';
-import { Box, Paper, Typography, Button, IconButton, Chip, useTheme, alpha, Fade, Stack } from '@mui/material';
+import React, {useEffect, useState} from 'react';
+import {alpha, Box, Button, Chip, IconButton, Paper, Stack, Typography, useTheme} from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import faLocale from '@fullcalendar/core/locales/fa';
-import { getAllCalendarEvents, deleteGlobalEvent } from '../api';
+import {deleteGlobalEvent, getAllCalendarEvents} from '../api';
 import CalendarEventForm from './CalendarEventForm';
-import {
-    Add as AddIcon,
-    EventNote as EventIcon,
-    Circle as DotIcon,
-    Delete as DeleteIcon,
-    OpenInNew as OpenIcon,
-    ChevronLeft, ChevronRight
-} from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import {Add as AddIcon, Delete as DeleteIcon, EventNote as EventIcon, OpenInNew as OpenIcon} from '@mui/icons-material';
+import {useNavigate} from 'react-router-dom';
 import moment from 'jalali-moment';
-import { motion, AnimatePresence } from 'framer-motion';
+import {AnimatePresence, motion} from 'framer-motion';
 
 const EVENT_COLORS = {
     meeting: '#FFD700', // طلایی
@@ -35,7 +28,7 @@ const EVENT_TITLES = {
     other: 'سایر'
 };
 
-const UnifiedCalendarPage = ({ filterType = null }) => {
+const UnifiedCalendarPage = ({filterType = null}) => {
     const navigate = useNavigate();
     const theme = useTheme(); // ✅ استفاده از تم
 
@@ -99,11 +92,13 @@ const UnifiedCalendarPage = ({ filterType = null }) => {
 
     const handleDelete = async (id, e) => {
         e.stopPropagation();
-        if(window.confirm("حذف شود؟")) {
+        if (window.confirm("حذف شود؟")) {
             try {
                 await deleteGlobalEvent(id);
                 setEvents(prev => prev.filter(ev => ev.id !== id));
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+            }
         }
     };
 
@@ -112,7 +107,7 @@ const UnifiedCalendarPage = ({ filterType = null }) => {
     const calendarBorderColor = theme.palette.divider;
 
     return (
-        <Box sx={{ p: 3, height: '88vh', display: 'flex', gap: 3, overflow: 'hidden' }}>
+        <Box sx={{p: 3, height: '88vh', display: 'flex', gap: 3, overflow: 'hidden'}}>
 
             {/* استایل‌های CSS برای کاستوم کردن FullCalendar (داینامیک) */}
             <style>
@@ -166,22 +161,22 @@ const UnifiedCalendarPage = ({ filterType = null }) => {
                 boxShadow: theme.shadows[4],
                 display: 'flex', flexDirection: 'column', position: 'relative'
             }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3}}>
                     <Stack direction="row" alignItems="center" spacing={1}>
-                         <Typography variant="h4" fontWeight="900" sx={{
-                             background: `linear-gradient(45deg, ${theme.palette.text.primary}, ${theme.palette.primary.main})`,
-                             backgroundClip: 'text', textFillColor: 'transparent'
-                         }}>
+                        <Typography variant="h4" fontWeight="900" sx={{
+                            background: `linear-gradient(45deg, ${theme.palette.text.primary}, ${theme.palette.primary.main})`,
+                            backgroundClip: 'text', textFillColor: 'transparent'
+                        }}>
                             {moment(selectedDate).locale('fa').format('MMMM')}
                         </Typography>
-                        <Typography variant="h4" fontWeight="300" sx={{ color: theme.palette.text.disabled }}>
+                        <Typography variant="h4" fontWeight="300" sx={{color: theme.palette.text.disabled}}>
                             {moment(selectedDate).locale('fa').format('YYYY')}
                         </Typography>
                     </Stack>
 
                     <Button
                         variant="contained"
-                        startIcon={<AddIcon />}
+                        startIcon={<AddIcon/>}
                         onClick={() => setOpenModal(true)}
                         sx={{
                             borderRadius: 4, px: 3, py: 1,
@@ -194,11 +189,11 @@ const UnifiedCalendarPage = ({ filterType = null }) => {
                     </Button>
                 </Box>
 
-                <Box sx={{ flexGrow: 1 }}>
+                <Box sx={{flexGrow: 1}}>
                     <FullCalendar
                         plugins={[dayGridPlugin, interactionPlugin]}
                         initialView="dayGridMonth"
-                        headerToolbar={{ left: 'prev,next', center: '', right: '' }}
+                        headerToolbar={{left: 'prev,next', center: '', right: ''}}
                         locale={faLocale}
                         events={events}
                         dateClick={handleDateClick}
@@ -206,17 +201,35 @@ const UnifiedCalendarPage = ({ filterType = null }) => {
                         dayCellContent={(arg) => {
                             const dateEvents = events.filter(e => moment(e.start).isSame(moment(arg.date), 'day'));
                             return (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', pt: 1.5 }}>
+                                <Box sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    height: '100%',
+                                    pt: 1.5
+                                }}>
                                     <Typography color="text.primary">{arg.dayNumberText}</Typography>
-                                    <Box sx={{ display: 'flex', gap: 0.5, mt: 1, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 45 }}>
+                                    <Box sx={{
+                                        display: 'flex',
+                                        gap: 0.5,
+                                        mt: 1,
+                                        flexWrap: 'wrap',
+                                        justifyContent: 'center',
+                                        maxWidth: 45
+                                    }}>
                                         {dateEvents.slice(0, 5).map((ev, i) => (
                                             <Box key={i} sx={{
                                                 width: 6, height: 6, borderRadius: '50%',
                                                 bgcolor: ev.backgroundColor,
                                                 boxShadow: `0 0 5px ${ev.backgroundColor}`
-                                            }} />
+                                            }}/>
                                         ))}
-                                        {dateEvents.length > 5 && <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: theme.palette.action.disabled }} />}
+                                        {dateEvents.length > 5 && <Box sx={{
+                                            width: 4,
+                                            height: 4,
+                                            borderRadius: '50%',
+                                            bgcolor: theme.palette.action.disabled
+                                        }}/>}
                                     </Box>
                                 </Box>
                             );
@@ -239,27 +252,50 @@ const UnifiedCalendarPage = ({ filterType = null }) => {
                     background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                     color: '#fff', textAlign: 'center'
                 }}>
-                    <Box sx={{ position: 'absolute', top: -20, left: -20, width: 100, height: 100, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-                    <Box sx={{ position: 'absolute', bottom: -30, right: -10, width: 150, height: 150, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                    <Box sx={{
+                        position: 'absolute',
+                        top: -20,
+                        left: -20,
+                        width: 100,
+                        height: 100,
+                        bgcolor: 'rgba(255,255,255,0.1)',
+                        borderRadius: '50%'
+                    }}/>
+                    <Box sx={{
+                        position: 'absolute',
+                        bottom: -30,
+                        right: -10,
+                        width: 150,
+                        height: 150,
+                        bgcolor: 'rgba(255,255,255,0.1)',
+                        borderRadius: '50%'
+                    }}/>
 
-                    <Typography variant="h1" fontWeight="900" sx={{ fontSize: '4rem', mb: -1, textShadow: '0 5px 15px rgba(0,0,0,0.2)' }}>
+                    <Typography variant="h1" fontWeight="900"
+                                sx={{fontSize: '4rem', mb: -1, textShadow: '0 5px 15px rgba(0,0,0,0.2)'}}>
                         {moment(selectedDate).locale('fa').format('D')}
                     </Typography>
-                    <Typography variant="h5" sx={{ opacity: 0.9, letterSpacing: 1 }}>
+                    <Typography variant="h5" sx={{opacity: 0.9, letterSpacing: 1}}>
                         {moment(selectedDate).locale('fa').format('dddd')}
                     </Typography>
                 </Box>
 
                 {/* لیست رویدادها با انیمیشن */}
-                <Box sx={{ p: 2, mt: -3, flexGrow: 1, overflowY: 'auto', zIndex: 2 }}>
+                <Box sx={{p: 2, mt: -3, flexGrow: 1, overflowY: 'auto', zIndex: 2}}>
                     <AnimatePresence mode="wait">
                         {dayEvents.length === 0 ? (
                             <motion.div
                                 key="empty"
-                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 40, opacity: 0.5 }}
+                                initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, y: -20}}
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    marginTop: 40,
+                                    opacity: 0.5
+                                }}
                             >
-                                <EventIcon sx={{ fontSize: 60, mb: 2, color: theme.palette.text.disabled }} />
+                                <EventIcon sx={{fontSize: 60, mb: 2, color: theme.palette.text.disabled}}/>
                                 <Typography color="text.secondary">هیچ برنامه‌ای نیست</Typography>
                             </motion.div>
                         ) : (
@@ -267,9 +303,9 @@ const UnifiedCalendarPage = ({ filterType = null }) => {
                                 {dayEvents.map((ev, index) => (
                                     <motion.div
                                         key={ev.id}
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.1 }}
+                                        initial={{opacity: 0, x: 20}}
+                                        animate={{opacity: 1, x: 0}}
+                                        transition={{delay: index * 0.1}}
                                     >
                                         <Paper sx={{
                                             p: 2, borderRadius: 3,
@@ -277,14 +313,25 @@ const UnifiedCalendarPage = ({ filterType = null }) => {
                                             border: `1px solid ${theme.palette.divider}`,
                                             position: 'relative', overflow: 'hidden',
                                             transition: '0.2s',
-                                            '&:hover': { bgcolor: alpha(theme.palette.action.hover, 0.1), transform: 'translateY(-2px)' }
+                                            '&:hover': {
+                                                bgcolor: alpha(theme.palette.action.hover, 0.1),
+                                                transform: 'translateY(-2px)'
+                                            }
                                         }}>
                                             {/* نوار رنگی کنار */}
-                                            <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, bgcolor: ev.backgroundColor }} />
+                                            <Box sx={{
+                                                position: 'absolute',
+                                                left: 0,
+                                                top: 0,
+                                                bottom: 0,
+                                                width: 4,
+                                                bgcolor: ev.backgroundColor
+                                            }}/>
 
-                                            <Box sx={{ pl: 2, display: 'flex', justifyContent: 'space-between' }}>
+                                            <Box sx={{pl: 2, display: 'flex', justifyContent: 'space-between'}}>
                                                 <Box>
-                                                    <Typography variant="subtitle1" fontWeight="bold" color="text.primary">{ev.title}</Typography>
+                                                    <Typography variant="subtitle1" fontWeight="bold"
+                                                                color="text.primary">{ev.title}</Typography>
                                                     <Stack direction="row" spacing={1} mt={1} alignItems="center">
                                                         <Chip
                                                             label={EVENT_TITLES[ev.extendedProps.type]}
@@ -305,12 +352,21 @@ const UnifiedCalendarPage = ({ filterType = null }) => {
                                                 </Box>
 
                                                 <Stack>
-                                                    <IconButton size="small" onClick={(e) => handleDelete(ev.id, e)} sx={{ color: theme.palette.text.secondary, '&:hover': { color: theme.palette.error.main } }}>
-                                                        <DeleteIcon fontSize="small" />
+                                                    <IconButton size="small" onClick={(e) => handleDelete(ev.id, e)}
+                                                                sx={{
+                                                                    color: theme.palette.text.secondary,
+                                                                    '&:hover': {color: theme.palette.error.main}
+                                                                }}>
+                                                        <DeleteIcon fontSize="small"/>
                                                     </IconButton>
                                                     {ev.extendedProps.projectId && (
-                                                        <IconButton size="small" onClick={() => navigate(`/project/${ev.extendedProps.projectId}`)} sx={{ color: theme.palette.text.secondary, '&:hover': { color: theme.palette.info.main } }}>
-                                                            <OpenIcon fontSize="small" />
+                                                        <IconButton size="small"
+                                                                    onClick={() => navigate(`/project/${ev.extendedProps.projectId}`)}
+                                                                    sx={{
+                                                                        color: theme.palette.text.secondary,
+                                                                        '&:hover': {color: theme.palette.info.main}
+                                                                    }}>
+                                                            <OpenIcon fontSize="small"/>
                                                         </IconButton>
                                                     )}
                                                 </Stack>

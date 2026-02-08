@@ -65,7 +65,7 @@ export const getDesignTokens = (mode) => ({
         }),
   },
   typography: {
-    fontFamily: '"Vazir", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Peyda", "Roboto", "Arial", sans-serif',
     h1: { fontWeight: 900 },
     h2: { fontWeight: 800 },
     h3: { fontWeight: 700 },

@@ -67,6 +67,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:5173",  # <-- این خط را برای Vite اضافه کنید
     "http://127.0.0.1:5173", # <-- این خط را هم اضافه کنید
+    "http://10.0.2.2:8000"
 ]
 
 # مهم: چون می‌خواهیم نقش (Role) به کاربر اضافه کنیم، باید
@@ -187,3 +188,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+# ✅ تنظیمات OpenRouter (هوش مصنوعی رایگان)
+OPENROUTER_API_KEY = "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"
+OPENROUTER_MODEL = "xiaomi/mimo-v2-flash:free"

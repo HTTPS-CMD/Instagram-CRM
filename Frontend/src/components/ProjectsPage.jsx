@@ -1,26 +1,45 @@
 // src/components/ProjectsPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-    Box, Typography, Grid, Paper, IconButton, Button,
-    TextField, InputAdornment, Chip, Avatar, Stack, CircularProgress,
-    LinearProgress, ToggleButton, ToggleButtonGroup, Table, TableBody,
-    TableCell, TableContainer, TableHead, TableRow, AvatarGroup, Tooltip, Fade, useTheme, alpha
+    alpha,
+    Avatar,
+    AvatarGroup,
+    Box,
+    Button,
+    Chip,
+    CircularProgress,
+    Fade,
+    Grid,
+    IconButton,
+    InputAdornment,
+    LinearProgress,
+    Paper,
+    Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    TextField,
+    ToggleButton,
+    ToggleButtonGroup,
+    Typography,
+    useTheme
 } from '@mui/material';
 import {
-    Search as SearchIcon,
+    AccessTime as ActiveIcon,
     Add as AddIcon,
     ArrowForward as ArrowIcon,
-    FilterList as FilterIcon,
+    CheckCircle as DoneIcon,
+    FolderOpen as ProjectIcon,
     GridView as GridViewIcon,
     List as ListViewIcon,
-    FolderOpen as ProjectIcon,
-    CheckCircle as DoneIcon,
-    TrendingUp as RevenueIcon,
-    AccessTime as ActiveIcon,
-    MoreVert as MoreIcon
+    Search as SearchIcon,
+    TrendingUp as RevenueIcon
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { getProjects } from '../api';
+import {useNavigate} from 'react-router-dom';
+import {getProjects} from '../api';
 import moment from 'jalali-moment';
 
 function ProjectsPage() {
@@ -56,12 +75,12 @@ function ProjectsPage() {
     // --- فیلتر کردن ---
     const filteredProjects = projects.filter(p => {
         const matchesSearch = p.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              (p.page_username && p.page_username.toLowerCase().includes(searchTerm.toLowerCase()));
+            (p.page_username && p.page_username.toLowerCase().includes(searchTerm.toLowerCase()));
 
         const matchesStatus = filterStatus === 'all'
             ? true
             : filterStatus === 'active' ? p.is_started
-            : !p.is_started;
+                : !p.is_started;
 
         return matchesSearch && matchesStatus;
     });
@@ -69,22 +88,23 @@ function ProjectsPage() {
     const formatPrice = (p) => Number(p).toLocaleString('fa-IR');
 
     // استایل کارت‌های آمار (داینامیک)
-    const StatCard = ({ title, value, icon, color, subtitle }) => (
+    const StatCard = ({title, value, icon, color, subtitle}) => (
         <Paper sx={{
             p: 3, borderRadius: 4, position: 'relative', overflow: 'hidden',
             bgcolor: alpha(color, 0.1), border: `1px solid ${alpha(color, 0.3)}`,
-            transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' }
+            transition: 'transform 0.3s', '&:hover': {transform: 'translateY(-5px)'}
         }}>
-            <Box sx={{ position: 'absolute', right: -10, top: -10, opacity: 0.1, color: color }}>
-                {React.cloneElement(icon, { sx: { fontSize: 100 } })}
+            <Box sx={{position: 'absolute', right: -10, top: -10, opacity: 0.1, color: color}}>
+                {React.cloneElement(icon, {sx: {fontSize: 100}})}
             </Box>
             <Stack spacing={1}>
-                <Avatar sx={{ bgcolor: color, width: 48, height: 48, borderRadius: 3 }}>
-                    {React.cloneElement(icon, { sx: { color: '#fff' } })}
+                <Avatar sx={{bgcolor: color, width: 48, height: 48, borderRadius: 3}}>
+                    {React.cloneElement(icon, {sx: {color: '#fff'}})}
                 </Avatar>
-                <Typography variant="h4" fontWeight="900" sx={{ color: theme.palette.text.primary }}>{value}</Typography>
-                <Typography variant="body2" fontWeight="bold" sx={{ color: color }}>{title}</Typography>
-                {subtitle && <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>{subtitle}</Typography>}
+                <Typography variant="h4" fontWeight="900" sx={{color: theme.palette.text.primary}}>{value}</Typography>
+                <Typography variant="body2" fontWeight="bold" sx={{color: color}}>{title}</Typography>
+                {subtitle &&
+                    <Typography variant="caption" sx={{color: theme.palette.text.secondary}}>{subtitle}</Typography>}
             </Stack>
         </Paper>
     );
@@ -103,16 +123,20 @@ function ProjectsPage() {
 
             <Grid container spacing={3} mb={5}>
                 <Grid item xs={12} sm={6} md={3}>
-                    <StatCard title="کل پروژه‌ها" value={totalProjects} icon={<ProjectIcon />} color={theme.palette.primary.main} />
+                    <StatCard title="کل پروژه‌ها" value={totalProjects} icon={<ProjectIcon/>}
+                              color={theme.palette.primary.main}/>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                    <StatCard title="پروژه‌های فعال" value={activeProjects} icon={<ActiveIcon />} color={theme.palette.success.main} />
+                    <StatCard title="پروژه‌های فعال" value={activeProjects} icon={<ActiveIcon/>}
+                              color={theme.palette.success.main}/>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                    <StatCard title="پروژه‌های تکمیل شده" value={completedProjects} icon={<DoneIcon />} color={theme.palette.secondary.main} />
+                    <StatCard title="پروژه‌های تکمیل شده" value={completedProjects} icon={<DoneIcon/>}
+                              color={theme.palette.secondary.main}/>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                    <StatCard title="حجم کل قراردادها" value={`${(totalRevenue / 1000000).toLocaleString('fa-IR')} M`} icon={<RevenueIcon />} color={theme.palette.warning.main} subtitle="میلیون تومان" />
+                    <StatCard title="حجم کل قراردادها" value={`${(totalRevenue / 1000000).toLocaleString('fa-IR')} M`}
+                              icon={<RevenueIcon/>} color={theme.palette.warning.main} subtitle="میلیون تومان"/>
                 </Grid>
             </Grid>
 
@@ -124,7 +148,7 @@ function ProjectsPage() {
                 border: `1px solid ${theme.palette.divider}`,
                 display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', justifyContent: 'space-between'
             }}>
-                <Stack direction="row" spacing={2} sx={{ flex: 1, minWidth: 300 }}>
+                <Stack direction="row" spacing={2} sx={{flex: 1, minWidth: 300}}>
                     <TextField
                         placeholder="جستجوی نام پروژه، کارفرما..."
                         variant="outlined"
@@ -133,30 +157,31 @@ function ProjectsPage() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         InputProps={{
-                            startAdornment: <InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>,
+                            startAdornment: <InputAdornment position="start"><SearchIcon
+                                color="action"/></InputAdornment>,
                         }}
                         sx={{
                             bgcolor: alpha(theme.palette.action.hover, 0.05), borderRadius: 2,
-                            '& fieldset': { border: 'none' }
+                            '& fieldset': {border: 'none'}
                         }}
                     />
-                    <Stack direction="row" spacing={1} display={{ xs: 'none', md: 'flex' }}>
+                    <Stack direction="row" spacing={1} display={{xs: 'none', md: 'flex'}}>
                         <Button
                             variant={filterStatus === 'all' ? "contained" : "text"}
                             onClick={() => setFilterStatus('all')}
-                            sx={{ borderRadius: 2, color: filterStatus === 'all' ? '#fff' : 'text.secondary' }}
+                            sx={{borderRadius: 2, color: filterStatus === 'all' ? '#fff' : 'text.secondary'}}
                         >همه</Button>
                         <Button
                             variant={filterStatus === 'active' ? "contained" : "text"}
                             onClick={() => setFilterStatus('active')}
                             color="success"
-                            sx={{ borderRadius: 2, color: filterStatus === 'active' ? '#fff' : 'text.secondary' }}
+                            sx={{borderRadius: 2, color: filterStatus === 'active' ? '#fff' : 'text.secondary'}}
                         >فعال</Button>
                         <Button
                             variant={filterStatus === 'completed' ? "contained" : "text"}
                             onClick={() => setFilterStatus('completed')}
                             color="secondary"
-                            sx={{ borderRadius: 2, color: filterStatus === 'completed' ? '#fff' : 'text.secondary' }}
+                            sx={{borderRadius: 2, color: filterStatus === 'completed' ? '#fff' : 'text.secondary'}}
                         >تکمیل</Button>
                     </Stack>
                 </Stack>
@@ -165,19 +190,21 @@ function ProjectsPage() {
                     <ToggleButtonGroup
                         value={viewMode}
                         exclusive
-                        onChange={(e, newView) => { if (newView) setViewMode(newView); }}
+                        onChange={(e, newView) => {
+                            if (newView) setViewMode(newView);
+                        }}
                         size="small"
-                        sx={{ bgcolor: alpha(theme.palette.action.hover, 0.05), borderRadius: 2 }}
+                        sx={{bgcolor: alpha(theme.palette.action.hover, 0.05), borderRadius: 2}}
                     >
-                        <ToggleButton value="grid"><GridViewIcon /></ToggleButton>
-                        <ToggleButton value="list"><ListViewIcon /></ToggleButton>
+                        <ToggleButton value="grid"><GridViewIcon/></ToggleButton>
+                        <ToggleButton value="list"><ListViewIcon/></ToggleButton>
                     </ToggleButtonGroup>
 
                     <Button
                         variant="contained"
-                        startIcon={<AddIcon />}
+                        startIcon={<AddIcon/>}
                         onClick={() => navigate('/project/new')}
-                        sx={{ fontWeight: 'bold', px: 3, borderRadius: 2, boxShadow: theme.shadows[3] }}
+                        sx={{fontWeight: 'bold', px: 3, borderRadius: 2, boxShadow: theme.shadows[3]}}
                     >
                         پروژه جدید
                     </Button>
@@ -186,9 +213,15 @@ function ProjectsPage() {
 
             {/* --- نمایش لیست پروژه‌ها --- */}
             {loading ? (
-                <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>
+                <Box display="flex" justifyContent="center" mt={10}><CircularProgress/></Box>
             ) : filteredProjects.length === 0 ? (
-                <Paper sx={{ p: 6, textAlign: 'center', bgcolor: 'transparent', border: `2px dashed ${theme.palette.divider}`, borderRadius: 4 }}>
+                <Paper sx={{
+                    p: 6,
+                    textAlign: 'center',
+                    bgcolor: 'transparent',
+                    border: `2px dashed ${theme.palette.divider}`,
+                    borderRadius: 4
+                }}>
                     <Typography color="text.secondary" variant="h6">هیچ پروژه‌ای با این مشخصات یافت نشد.</Typography>
                 </Paper>
             ) : viewMode === 'grid' ? (
@@ -214,13 +247,25 @@ function ProjectsPage() {
                                     }}
                                 >
                                     {/* نوار رنگی بالا */}
-                                    <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, bgcolor: project.is_started ? 'success.main' : 'secondary.main' }} />
+                                    <Box sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        height: 4,
+                                        bgcolor: project.is_started ? 'success.main' : 'secondary.main'
+                                    }}/>
 
                                     <Stack direction="row" justifyContent="space-between" mb={2} mt={1}>
                                         <Avatar
                                             src={project.page_logo}
                                             variant="rounded"
-                                            sx={{ width: 56, height: 56, bgcolor: 'primary.main', border: `1px solid ${theme.palette.divider}` }}
+                                            sx={{
+                                                width: 56,
+                                                height: 56,
+                                                bgcolor: 'primary.main',
+                                                border: `1px solid ${theme.palette.divider}`
+                                            }}
                                         >
                                             {project.project_name[0]}
                                         </Avatar>
@@ -229,7 +274,7 @@ function ProjectsPage() {
                                             size="small"
                                             color={project.is_started ? "success" : "secondary"}
                                             variant="outlined"
-                                            sx={{ fontWeight: 'bold' }}
+                                            sx={{fontWeight: 'bold'}}
                                         />
                                     </Stack>
 
@@ -243,22 +288,33 @@ function ProjectsPage() {
                                     {/* نوار پیشرفت (فرضی) */}
                                     <Box mb={2}>
                                         <Stack direction="row" justifyContent="space-between" mb={0.5}>
-                                            <Typography variant="caption" color="text.secondary">پیشرفت پروژه</Typography>
+                                            <Typography variant="caption" color="text.secondary">پیشرفت
+                                                پروژه</Typography>
                                             <Typography variant="caption" color="text.primary">65%</Typography>
                                         </Stack>
-                                        <LinearProgress variant="determinate" value={65} sx={{ height: 6, borderRadius: 3 }} />
+                                        <LinearProgress variant="determinate" value={65}
+                                                        sx={{height: 6, borderRadius: 3}}/>
                                     </Box>
 
                                     {/* اعضای تیم (فرضی) */}
-                                    <Stack direction="row" justifyContent="space-between" alignItems="center" pt={2} borderTop={`1px solid ${theme.palette.divider}`}>
-                                        <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: 10, borderColor: theme.palette.background.paper } }}>
-                                            <Avatar sx={{ bgcolor: 'orange' }}>A</Avatar>
-                                            <Avatar sx={{ bgcolor: 'pink' }}>B</Avatar>
-                                            <Avatar sx={{ bgcolor: 'cyan' }}>C</Avatar>
-                                            <Avatar sx={{ bgcolor: 'gray' }}>+2</Avatar>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center" pt={2}
+                                           borderTop={`1px solid ${theme.palette.divider}`}>
+                                        <AvatarGroup max={3} sx={{
+                                            '& .MuiAvatar-root': {
+                                                width: 24,
+                                                height: 24,
+                                                fontSize: 10,
+                                                borderColor: theme.palette.background.paper
+                                            }
+                                        }}>
+                                            <Avatar sx={{bgcolor: 'orange'}}>A</Avatar>
+                                            <Avatar sx={{bgcolor: 'pink'}}>B</Avatar>
+                                            <Avatar sx={{bgcolor: 'cyan'}}>C</Avatar>
+                                            <Avatar sx={{bgcolor: 'gray'}}>+2</Avatar>
                                         </AvatarGroup>
                                         <Typography variant="body2" fontWeight="bold" color="success.main">
-                                            {formatPrice(project.contract_amount)} <span style={{fontSize:10, color: theme.palette.text.secondary}}>ت</span>
+                                            {formatPrice(project.contract_amount)} <span
+                                            style={{fontSize: 10, color: theme.palette.text.secondary}}>ت</span>
                                         </Typography>
                                     </Stack>
                                 </Paper>
@@ -267,10 +323,19 @@ function ProjectsPage() {
                     ))}
                 </Grid>
             ) : (
-                <TableContainer component={Paper} sx={{ bgcolor: alpha(theme.palette.background.paper, 0.6), backdropFilter: 'blur(10px)', borderRadius: 3 }}>
+                <TableContainer component={Paper} sx={{
+                    bgcolor: alpha(theme.palette.background.paper, 0.6),
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 3
+                }}>
                     <Table>
                         <TableHead>
-                            <TableRow sx={{ '& th': { color: 'text.secondary', borderBottom: `1px solid ${theme.palette.divider}` } }}>
+                            <TableRow sx={{
+                                '& th': {
+                                    color: 'text.secondary',
+                                    borderBottom: `1px solid ${theme.palette.divider}`
+                                }
+                            }}>
                                 <TableCell>پروژه</TableCell>
                                 <TableCell>کارفرما</TableCell>
                                 <TableCell>وضعیت</TableCell>
@@ -281,21 +346,32 @@ function ProjectsPage() {
                         </TableHead>
                         <TableBody>
                             {filteredProjects.map((project) => (
-                                <TableRow key={project.id} hover sx={{ '& td': { color: 'text.primary', borderBottom: `1px solid ${theme.palette.divider}` }, cursor:'pointer' }} onClick={() => navigate(`/project/${project.id}`)}>
+                                <TableRow key={project.id} hover sx={{
+                                    '& td': {
+                                        color: 'text.primary',
+                                        borderBottom: `1px solid ${theme.palette.divider}`
+                                    }, cursor: 'pointer'
+                                }} onClick={() => navigate(`/project/${project.id}`)}>
                                     <TableCell>
                                         <Stack direction="row" alignItems="center" spacing={2}>
-                                            <Avatar src={project.page_logo} variant="rounded" sx={{ width: 32, height: 32, bgcolor:'primary.main' }}>{project.project_name[0]}</Avatar>
+                                            <Avatar src={project.page_logo} variant="rounded" sx={{
+                                                width: 32,
+                                                height: 32,
+                                                bgcolor: 'primary.main'
+                                            }}>{project.project_name[0]}</Avatar>
                                             <Typography fontWeight="bold">{project.project_name}</Typography>
                                         </Stack>
                                     </TableCell>
                                     <TableCell>{project.page_username || '---'}</TableCell>
                                     <TableCell>
-                                        <Chip label={project.is_started ? "فعال" : "پایان"} size="small" color={project.is_started ? "success" : "secondary"} variant="filled" />
+                                        <Chip label={project.is_started ? "فعال" : "پایان"} size="small"
+                                              color={project.is_started ? "success" : "secondary"} variant="filled"/>
                                     </TableCell>
                                     <TableCell>{formatPrice(project.contract_amount)} ت</TableCell>
                                     <TableCell>{project.start_date ? moment(project.start_date).format('jYYYY/jMM/jDD') : '-'}</TableCell>
                                     <TableCell align="left">
-                                        <IconButton size="small" sx={{ color: 'text.secondary' }}><ArrowIcon fontSize="small" /></IconButton>
+                                        <IconButton size="small" sx={{color: 'text.secondary'}}><ArrowIcon
+                                            fontSize="small"/></IconButton>
                                     </TableCell>
                                 </TableRow>
                             ))}

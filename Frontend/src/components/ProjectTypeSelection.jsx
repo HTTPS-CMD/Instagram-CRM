@@ -1,9 +1,9 @@
 // src/components/ProjectTypeSelection.jsx
 import React from 'react';
-import { Box, Typography, Paper, Stack, Button, useTheme, alpha } from '@mui/material';
-import { Instagram as InstaIcon, MovieCreation as MovieIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import {alpha, Box, Button, Paper, Stack, Typography, useTheme} from '@mui/material';
+import {ArrowBack as ArrowBackIcon, Instagram as InstaIcon, MovieCreation as MovieIcon} from '@mui/icons-material';
+import {useNavigate} from 'react-router-dom';
+import {motion} from 'framer-motion';
 
 function ProjectTypeSelection() {
     const navigate = useNavigate();
@@ -31,7 +31,13 @@ function ProjectTypeSelection() {
     };
 
     return (
-        <Box sx={{ height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <Box sx={{
+            height: 'calc(100vh - 100px)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center'
+        }}>
 
             <Typography variant="h3" fontWeight="900" gutterBottom sx={{
                 mb: 1,
@@ -40,35 +46,45 @@ function ProjectTypeSelection() {
             }}>
                 نوع پروژه را انتخاب کنید
             </Typography>
-            <Typography variant="h6" sx={{ mb: 6, opacity: 0.7, color: theme.palette.text.secondary }}>
+            <Typography variant="h6" sx={{mb: 6, opacity: 0.7, color: theme.palette.text.secondary}}>
                 برای شروع، مشخص کنید که چه نوع قراردادی با مشتری دارید
             </Typography>
 
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={4}>
+            <Stack direction={{xs: 'column', md: 'row'}} spacing={4}>
 
                 {/* کارت ۱: اینستاگرام */}
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.div whileHover={{scale: 1.05}} whileTap={{scale: 0.95}}>
                     <Paper
                         sx={glassStyle}
                         onClick={() => navigate('/project/create?type=instagram')}
                     >
-                        <InstaIcon sx={{ fontSize: 90, mb: 3, color: '#E1306C', filter: 'drop-shadow(0 0 10px rgba(225, 48, 108, 0.4))' }} />
+                        <InstaIcon sx={{
+                            fontSize: 90,
+                            mb: 3,
+                            color: '#E1306C',
+                            filter: 'drop-shadow(0 0 10px rgba(225, 48, 108, 0.4))'
+                        }}/>
                         <Typography variant="h5" fontWeight="bold">مدیریت اینستاگرام</Typography>
-                        <Typography variant="body2" sx={{ mt: 2, color: theme.palette.text.secondary }}>
+                        <Typography variant="body2" sx={{mt: 2, color: theme.palette.text.secondary}}>
                             قرارداد ماهانه، تقویم محتوایی، مدیریت پیج، تولید ریلز و پست
                         </Typography>
                     </Paper>
                 </motion.div>
 
                 {/* کارت ۲: تیزر / پروژه تکی */}
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.div whileHover={{scale: 1.05}} whileTap={{scale: 0.95}}>
                     <Paper
                         sx={glassStyle}
                         onClick={() => navigate('/project/create?type=teaser')}
                     >
-                        <MovieIcon sx={{ fontSize: 90, mb: 3, color: theme.palette.warning.main, filter: `drop-shadow(0 0 10px ${alpha(theme.palette.warning.main, 0.4)})` }} />
+                        <MovieIcon sx={{
+                            fontSize: 90,
+                            mb: 3,
+                            color: theme.palette.warning.main,
+                            filter: `drop-shadow(0 0 10px ${alpha(theme.palette.warning.main, 0.4)})`
+                        }}/>
                         <Typography variant="h5" fontWeight="bold">پروژه تکی / تیزر</Typography>
-                        <Typography variant="body2" sx={{ mt: 2, color: theme.palette.text.secondary }}>
+                        <Typography variant="body2" sx={{mt: 2, color: theme.palette.text.secondary}}>
                             فیلم‌برداری تیزر تبلیغاتی، عکاسی، طراحی لوگو (بدون مدیریت پیج)
                         </Typography>
                     </Paper>
@@ -77,13 +93,13 @@ function ProjectTypeSelection() {
             </Stack>
 
             <Button
-                startIcon={<ArrowBackIcon />}
+                startIcon={<ArrowBackIcon/>}
                 sx={{
                     mt: 8,
                     opacity: 0.8,
                     color: theme.palette.text.primary,
                     borderColor: theme.palette.divider,
-                    '&:hover': { borderColor: theme.palette.text.primary }
+                    '&:hover': {borderColor: theme.palette.text.primary}
                 }}
                 variant="outlined"
                 onClick={() => navigate('/dashboard')}

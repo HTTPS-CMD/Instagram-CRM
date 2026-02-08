@@ -1,11 +1,29 @@
 // src/components/ScenarioManager.jsx
-import React, { useState } from 'react';
-import { Box, Paper, ToggleButton, ToggleButtonGroup, Typography, Stack, Button, Dialog, DialogTitle, DialogContent, useTheme, alpha } from '@mui/material';
-import { ViewList as ListIcon, ViewKanban as KanbanIcon, MovieCreation as ScenarioIcon, Add as AddIcon } from '@mui/icons-material';
-import ScenarioList, { ScenarioForm } from './ScenarioList'; // ✅ ایمپورت ScenarioForm
+import React, {useState} from 'react';
+import {
+    alpha,
+    Box,
+    Button,
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    Paper,
+    Stack,
+    ToggleButton,
+    ToggleButtonGroup,
+    Typography,
+    useTheme
+} from '@mui/material';
+import {
+    Add as AddIcon,
+    MovieCreation as ScenarioIcon,
+    ViewKanban as KanbanIcon,
+    ViewList as ListIcon
+} from '@mui/icons-material';
+import ScenarioList, {ScenarioForm} from './ScenarioList'; // ✅ ایمپورت ScenarioForm
 import ScenarioKanban from './ScenarioKanban';
 
-const ScenarioManager = ({ projectId }) => {
+const ScenarioManager = ({projectId}) => {
     const theme = useTheme();
     const [viewMode, setViewMode] = useState('kanban');
     const [openModal, setOpenModal] = useState(false);
@@ -23,12 +41,14 @@ const ScenarioManager = ({ projectId }) => {
     };
 
     return (
-        <Box sx={{ mt: 3 }}>
+        <Box sx={{mt: 3}}>
             {/* هدر و کنترلر سوئیچ */}
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" mb={3} spacing={2}>
+            <Stack direction={{xs: 'column', sm: 'row'}} justifyContent="space-between" alignItems="center" mb={3}
+                   spacing={2}>
                 <Box>
-                    <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.primary }}>
-                        <ScenarioIcon color="primary" /> مدیریت سناریوها
+                    <Typography variant="h6" fontWeight="bold"
+                                sx={{display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.primary}}>
+                        <ScenarioIcon color="primary"/> مدیریت سناریوها
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                         ایده‌پردازی، نگارش و پیگیری سناریوهای پروژه
@@ -38,7 +58,7 @@ const ScenarioManager = ({ projectId }) => {
                 <Stack direction="row" spacing={2}>
                     <Button
                         variant="contained"
-                        startIcon={<AddIcon />}
+                        startIcon={<AddIcon/>}
                         onClick={() => setOpenModal(true)}
                         sx={{
                             bgcolor: theme.palette.primary.main,
@@ -68,13 +88,13 @@ const ScenarioManager = ({ projectId }) => {
                                     '&.Mui-selected': {
                                         color: '#fff',
                                         bgcolor: theme.palette.primary.main,
-                                        '&:hover': { bgcolor: theme.palette.primary.dark }
+                                        '&:hover': {bgcolor: theme.palette.primary.dark}
                                     }
                                 }
                             }}
                         >
-                            <ToggleButton value="list"><ListIcon sx={{ mr: 1 }} /> لیست</ToggleButton>
-                            <ToggleButton value="kanban"><KanbanIcon sx={{ mr: 1 }} /> بورد</ToggleButton>
+                            <ToggleButton value="list"><ListIcon sx={{mr: 1}}/> لیست</ToggleButton>
+                            <ToggleButton value="kanban"><KanbanIcon sx={{mr: 1}}/> بورد</ToggleButton>
                         </ToggleButtonGroup>
                     </Paper>
                 </Stack>
@@ -83,17 +103,17 @@ const ScenarioManager = ({ projectId }) => {
             {/* نمایش محتوا بر اساس انتخاب کاربر */}
             <Box>
                 {viewMode === 'list' ? (
-                    <ScenarioList key={refreshTrigger} projectId={projectId} />
+                    <ScenarioList key={refreshTrigger} projectId={projectId}/>
                 ) : (
-                    <ScenarioKanban key={refreshTrigger} projectId={projectId} />
+                    <ScenarioKanban key={refreshTrigger} projectId={projectId}/>
                 )}
             </Box>
 
             {/* مودال ایجاد سناریو */}
             <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="md" fullWidth
-                PaperProps={{ sx: { bgcolor: theme.palette.background.paper, color: theme.palette.text.primary } }}
+                    PaperProps={{sx: {bgcolor: theme.palette.background.paper, color: theme.palette.text.primary}}}
             >
-                <DialogTitle sx={{ bgcolor: theme.palette.primary.main, color: '#fff' }}>ایجاد سناریو جدید</DialogTitle>
+                <DialogTitle sx={{bgcolor: theme.palette.primary.main, color: '#fff'}}>ایجاد سناریو جدید</DialogTitle>
                 <DialogContent dividers>
                     <ScenarioForm
                         projectId={projectId}

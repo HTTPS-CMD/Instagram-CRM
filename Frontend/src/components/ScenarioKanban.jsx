@@ -1,24 +1,24 @@
 // src/components/ScenarioKanban.jsx
-import React, { useState, useEffect } from 'react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Box, Paper, Typography, Chip, Stack, CircularProgress, useTheme, alpha } from '@mui/material';
-import { getScenarios, updateScenario } from '../api';
-import { useSnackbar } from 'notistack';
-import { MovieCreation as ReelsIcon, HistoryEdu as StoryIcon } from '@mui/icons-material';
+import React, {useEffect, useState} from 'react';
+import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
+import {alpha, Box, Chip, CircularProgress, Paper, Stack, Typography, useTheme} from '@mui/material';
+import {getScenarios, updateScenario} from '../api';
+import {useSnackbar} from 'notistack';
+import {HistoryEdu as StoryIcon, MovieCreation as ReelsIcon} from '@mui/icons-material';
 
 const COLUMNS = {
-    idea: { title: 'ایده اولیه', color: '#ff9800' },
-    approved: { title: 'تایید شده', color: '#4caf50' },
-    filmed: { title: 'فیلم‌برداری شده', color: '#9c27b0' },
-    posted: { title: 'منتشر شده', color: '#2196f3' },
-    rejected: { title: 'نیازمند اصلاح', color: '#f44336' }
+    idea: {title: 'ایده اولیه', color: '#ff9800'},
+    approved: {title: 'تایید شده', color: '#4caf50'},
+    filmed: {title: 'فیلم‌برداری شده', color: '#9c27b0'},
+    posted: {title: 'منتشر شده', color: '#2196f3'},
+    rejected: {title: 'نیازمند اصلاح', color: '#f44336'}
 };
 
-function ScenarioKanban({ projectId }) {
+function ScenarioKanban({projectId}) {
     const theme = useTheme(); // ✅ استفاده از تم
     const [scenarios, setScenarios] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { enqueueSnackbar } = useSnackbar();
+    const {enqueueSnackbar} = useSnackbar();
 
     useEffect(() => {
         fetchScenarios();
@@ -37,19 +37,19 @@ function ScenarioKanban({ projectId }) {
 
     const onDragEnd = async (result) => {
         if (!result.destination) return;
-        const { source, destination, draggableId } = result;
+        const {source, destination, draggableId} = result;
 
         if (source.droppableId !== destination.droppableId) {
             const updatedScenarios = scenarios.map(s =>
-                s.id.toString() === draggableId ? { ...s, status: destination.droppableId } : s
+                s.id.toString() === draggableId ? {...s, status: destination.droppableId} : s
             );
             setScenarios(updatedScenarios);
 
             try {
-                await updateScenario(draggableId, { status: destination.droppableId }, projectId);
-                enqueueSnackbar('وضعیت سناریو تغییر کرد', { variant: 'success' });
+                await updateScenario(draggableId, {status: destination.droppableId}, projectId);
+                enqueueSnackbar('وضعیت سناریو تغییر کرد', {variant: 'success'});
             } catch (err) {
-                enqueueSnackbar('خطا در تغییر وضعیت', { variant: 'error' });
+                enqueueSnackbar('خطا در تغییر وضعیت', {variant: 'error'});
                 fetchScenarios();
             }
         }
@@ -64,7 +64,7 @@ function ScenarioKanban({ projectId }) {
         marginBottom: 8,
     });
 
-    if (loading) return <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>;
+    if (loading) return <Box display="flex" justifyContent="center" p={5}><CircularProgress/></Box>;
 
     const columnsData = Object.keys(COLUMNS).map(colId => ({
         id: colId,
@@ -74,9 +74,9 @@ function ScenarioKanban({ projectId }) {
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
-            <Box sx={{ display: 'flex', overflowX: 'auto', gap: 2, pb: 2, minHeight: 500, width: '100%' }}>
+            <Box sx={{display: 'flex', overflowX: 'auto', gap: 2, pb: 2, minHeight: 500, width: '100%'}}>
                 {columnsData.map((column) => (
-                    <Box key={column.id} sx={{ minWidth: 280, width: 280, flexShrink: 0 }}>
+                    <Box key={column.id} sx={{minWidth: 280, width: 280, flexShrink: 0}}>
                         <Paper
                             elevation={3}
                             sx={{
@@ -90,9 +90,14 @@ function ScenarioKanban({ projectId }) {
                                 border: `1px solid ${theme.palette.divider}`
                             }}
                         >
-                            <Typography variant="subtitle1" fontWeight="bold" mb={2} sx={{ display: 'flex', justifyContent: 'space-between', color: theme.palette.text.primary }}>
+                            <Typography variant="subtitle1" fontWeight="bold" mb={2} sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                color: theme.palette.text.primary
+                            }}>
                                 {column.title}
-                                <Chip label={column.items.length} size="small" sx={{ bgcolor: column.color, color: '#fff', height: 20, fontWeight:'bold' }} />
+                                <Chip label={column.items.length} size="small"
+                                      sx={{bgcolor: column.color, color: '#fff', height: 20, fontWeight: 'bold'}}/>
                             </Typography>
 
                             <Droppable droppableId={column.id}>
@@ -135,14 +140,17 @@ function ScenarioKanban({ projectId }) {
                                                         <Typography variant="body2" fontWeight="bold" gutterBottom>
                                                             {item.title}
                                                         </Typography>
-                                                        <Typography variant="caption" display="block" color="text.secondary" noWrap mb={1.5}>
+                                                        <Typography variant="caption" display="block"
+                                                                    color="text.secondary" noWrap mb={1.5}>
                                                             {item.summary || 'بدون خلاصه'}
                                                         </Typography>
 
                                                         {/* ✅ اضافه کردن نوع سناریو (ریلز/استوری) در پایین کارت */}
                                                         <Stack direction="row" justifyContent="flex-end">
                                                             <Chip
-                                                                icon={item.scenario_type === 'story' ? <StoryIcon sx={{fontSize: 14}}/> : <ReelsIcon sx={{fontSize: 14}}/>}
+                                                                icon={item.scenario_type === 'story' ?
+                                                                    <StoryIcon sx={{fontSize: 14}}/> :
+                                                                    <ReelsIcon sx={{fontSize: 14}}/>}
                                                                 label={item.scenario_type === 'story' ? 'استوری' : 'ریلز'}
                                                                 size="small"
                                                                 variant="outlined"

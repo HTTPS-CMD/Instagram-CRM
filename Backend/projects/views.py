@@ -46,7 +46,7 @@ User = get_user_model()
 # ✅ تنظیمات OpenRouter با مدل جدید شیائومی
 OPENROUTER_API_KEY = "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"
 # 🔹 مدل انتخاب شده: شیائومی (رایگان و سریع)
-OPENROUTER_MODEL = "xiaomi/mimo-v2-flash:free"
+OPENROUTER_MODEL = "liquid/lfm-2.5-1.2b-thinking:free"
 
 
 # --- Permissions (سطح دسترسی) ---
@@ -189,6 +189,42 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except Project.DoesNotExist:
             return Response({'error': 'Project not found'}, status=404)
 
+    def list(self, request, *args, **kwargs):
+        """
+        نسخه اصلاح شده و نهایی: استفاده از contract_amount به جای price
+        """
+        try:
+            # 1. فقط پروژه‌هایی که الان فعال هستند را چک کن
+            active_projects = Project.objects.filter(is_started=True)
+            today = timezone.now().date()
+
+            for project in active_projects:
+                # اگر تاریخ پایان پروژه تعریف نشده، کاری نداشته باش
+                if not project.end_date:
+                    continue
+
+                # 2. اگر تاریخ پایان پروژه گذشته است (امروز > تاریخ پایان)
+                if project.end_date < today:
+
+                    # 3. محاسبه کل مبلغ پرداخت شده توسط مشتری
+                    # (چون در models.py اسم related_name='payments' است، از همین استفاده می‌کنیم)
+                    total_paid_data = project.payments.filter(is_paid=True).aggregate(Sum('amount'))
+                    total_paid = total_paid_data.get('amount__sum') or 0
+
+                    # 4. ✅ اصلاح مهم: مقایسه با contract_amount (مبلغ قرارداد)
+                    # اگر مبلغ قرارداد بیشتر از 0 بود و پرداختی مشتری کمتر از مبلغ قرارداد بود:
+                    if project.contract_amount > 0 and total_paid < project.contract_amount:
+                        project.is_started = False
+                        project.save()
+                        print(f"✅ Project '{project.project_name}' DEACTIVATED automatically (Overdue & Unpaid).")
+
+        except Exception as e:
+            # اگر خطایی رخ داد، در کنسول چاپ کن ولی نگذار سرور متوقف شود
+            print(f"⚠️ Error in auto-deactivate logic: {str(e)}")
+
+        # 5. ادامه روال عادی و ارسال لیست به فرانت‌اند
+        return super().list(request, *args, **kwargs)
+
 
 class ScenarioViewSet(viewsets.ModelViewSet):
     serializer_class = ScenarioSerializer
@@ -218,7 +254,7 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         project = get_object_or_404(Project, pk=self.kwargs.get('project_pk'))
         serializer.save(project=project)
-
+ 
 
 class WeeklyReportViewSet(viewsets.ModelViewSet):
     serializer_class = WeeklyReportSerializer
@@ -240,10 +276,12 @@ class ProjectFileViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsProjectTeamMember]
 
     def get_queryset(self):
-        project_pk = self.kwargs.get('project_pk')
-        if project_pk:
-            return ProjectFile.objects.filter(project_id=project_pk)
-        return ProjectFile.objects.all()
+        # حالت Nested: اگر در URL شناسه پروژه وجود داشت (projects/1/files/)
+        if 'project_pk' in self.kwargs:
+            return ProjectFile.objects.filter(project_id=self.kwargs['project_pk'])
+
+        # حالت Global: اگر شناسه پروژه نبود (all-project-files/) -> همه فایل‌ها را برگردان
+        return ProjectFile.objects.all().order_by('-uploaded_at')
 
     def perform_create(self, serializer):
         project = get_object_or_404(Project, pk=self.kwargs.get('project_pk'))
@@ -254,10 +292,12 @@ class ProjectPaymentViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectPaymentSerializer
 
     def get_queryset(self):
-        project_pk = self.kwargs.get('project_pk')
-        if project_pk:
-            return ProjectPayment.objects.filter(project_id=project_pk).order_by('-date')
-        return ProjectPayment.objects.all()
+        # حالت Nested
+        if 'project_pk' in self.kwargs:
+            return ProjectPayment.objects.filter(project_id=self.kwargs['project_pk'])
+
+        # حالت Global: همه تراکنش‌ها
+        return ProjectPayment.objects.all().order_by('-date')
 
     def perform_create(self, serializer):
         project = get_object_or_404(Project, pk=self.kwargs.get('project_pk'))
@@ -274,10 +314,12 @@ class ProjectExpenseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
-        project_pk = self.kwargs.get('project_pk')
-        if project_pk:
-            return ProjectExpense.objects.filter(project_id=project_pk).order_by('-date')
-        return ProjectExpense.objects.all()
+        # حالت Nested
+        if 'project_pk' in self.kwargs:
+            return ProjectExpense.objects.filter(project_id=self.kwargs['project_pk'])
+
+        # حالت Global: همه هزینه‌ها
+        return ProjectExpense.objects.all().order_by('-date')
 
     def perform_create(self, serializer):
         project = get_object_or_404(Project, pk=self.kwargs.get('project_pk'))

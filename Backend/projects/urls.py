@@ -36,6 +36,10 @@ standard_router.register(r'leads', LeadViewSet, basename='leads')
 # ✅ این خط اضافه شد تا آدرس /api/v1/tasks/ فعال شود (برای کارتابل پرسنل)
 standard_router.register(r'tasks', TaskViewSet, basename='all-tasks')
 
+standard_router.register(r'all-project-files', ProjectFileViewSet, basename='all-project-files')
+standard_router.register(r'all-payments', ProjectPaymentViewSet, basename='all-payments')
+standard_router.register(r'all-expenses', ProjectExpenseViewSet, basename='all-expenses')
+
 
 projects_router = routers.NestedDefaultRouter(standard_router, r'projects', lookup='project')
 # ✅ حل مشکل ارور برای روتر تو در تو

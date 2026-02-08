@@ -1,11 +1,22 @@
 // src/components/ScenarioComments.jsx
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Paper, Avatar, Stack, CircularProgress, useTheme, alpha } from '@mui/material';
-import { Send as SendIcon, Person as PersonIcon } from '@mui/icons-material';
-import { getScenarioComments, createScenarioComment } from '../api';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+    alpha,
+    Avatar,
+    Box,
+    CircularProgress,
+    IconButton,
+    Paper,
+    Stack,
+    TextField,
+    Typography,
+    useTheme
+} from '@mui/material';
+import {Person as PersonIcon, Send as SendIcon} from '@mui/icons-material';
+import {createScenarioComment, getScenarioComments} from '../api';
 import moment from 'jalali-moment';
 
-function ScenarioComments({ scenarioId, currentUser }) {
+function ScenarioComments({scenarioId, currentUser}) {
     const theme = useTheme(); // ✅ استفاده از تم
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
@@ -34,7 +45,7 @@ function ScenarioComments({ scenarioId, currentUser }) {
 
     const scrollToBottom = () => {
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
         }, 100);
     };
 
@@ -64,11 +75,12 @@ function ScenarioComments({ scenarioId, currentUser }) {
         }
     };
 
-    if (loading) return <Box sx={{display:'flex', justifyContent:'center', p:2}}><CircularProgress size={20} /></Box>;
+    if (loading) return <Box sx={{display: 'flex', justifyContent: 'center', p: 2}}><CircularProgress size={20}/></Box>;
 
     return (
-        <Box sx={{ mt: 3, borderTop: `1px solid ${theme.palette.divider}`, pt: 2 }}>
-            <Typography variant="subtitle2" gutterBottom color="primary" fontWeight="bold">💬 گفتگو و اصلاحات</Typography>
+        <Box sx={{mt: 3, borderTop: `1px solid ${theme.palette.divider}`, pt: 2}}>
+            <Typography variant="subtitle2" gutterBottom color="primary" fontWeight="bold">💬 گفتگو و
+                اصلاحات</Typography>
 
             {/* لیست پیام‌ها */}
             <Paper elevation={0} sx={{
@@ -82,7 +94,13 @@ function ScenarioComments({ scenarioId, currentUser }) {
                 border: `1px solid ${theme.palette.divider}`
             }}>
                 {comments.length === 0 ? (
-                    <Box sx={{height:'100%', display:'flex', alignItems:'center', justifyContent:'center', opacity:0.5}}>
+                    <Box sx={{
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.5
+                    }}>
                         <Typography variant="caption" color="text.secondary">هنوز پیامی ثبت نشده است.</Typography>
                     </Box>
                 ) : (
@@ -95,11 +113,21 @@ function ScenarioComments({ scenarioId, currentUser }) {
                                 alignItems: isMe ? 'flex-start' : 'flex-end', // در RTL: استارت=راست (من)، اند=چپ (دیگران)
                                 mb: 1.5
                             }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexDirection: isMe ? 'row' : 'row-reverse' }}>
-                                    <Avatar sx={{ width: 24, height: 24, bgcolor: isMe ? 'primary.main' : 'secondary.main', fontSize: 10 }}>
+                                <Box sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    flexDirection: isMe ? 'row' : 'row-reverse'
+                                }}>
+                                    <Avatar sx={{
+                                        width: 24,
+                                        height: 24,
+                                        bgcolor: isMe ? 'primary.main' : 'secondary.main',
+                                        fontSize: 10
+                                    }}>
                                         {msg.author_name ? msg.author_name.charAt(0) : <PersonIcon fontSize="inherit"/>}
                                     </Avatar>
-                                    <Typography variant="caption" color="text.secondary" sx={{fontSize:'0.7rem'}}>
+                                    <Typography variant="caption" color="text.secondary" sx={{fontSize: '0.7rem'}}>
                                         {msg.author_name || msg.author_username}
                                     </Typography>
                                 </Box>
@@ -116,8 +144,16 @@ function ScenarioComments({ scenarioId, currentUser }) {
                                     position: 'relative',
                                     border: isMe ? 'none' : `1px solid ${theme.palette.divider}`
                                 }}>
-                                    <Typography variant="body2" sx={{whiteSpace:'pre-wrap', lineHeight: 1.6}}>{msg.text}</Typography>
-                                    <Typography variant="caption" sx={{display:'block', textAlign:'left', mt:0.5, opacity:0.7, fontSize:'0.6rem', color: isMe ? 'rgba(255,255,255,0.7)' : 'text.disabled'}}>
+                                    <Typography variant="body2"
+                                                sx={{whiteSpace: 'pre-wrap', lineHeight: 1.6}}>{msg.text}</Typography>
+                                    <Typography variant="caption" sx={{
+                                        display: 'block',
+                                        textAlign: 'left',
+                                        mt: 0.5,
+                                        opacity: 0.7,
+                                        fontSize: '0.6rem',
+                                        color: isMe ? 'rgba(255,255,255,0.7)' : 'text.disabled'
+                                    }}>
                                         {moment(msg.created_at).locale('fa').format('HH:mm')}
                                     </Typography>
                                 </Paper>
@@ -125,7 +161,7 @@ function ScenarioComments({ scenarioId, currentUser }) {
                         );
                     })
                 )}
-                <div ref={messagesEndRef} />
+                <div ref={messagesEndRef}/>
             </Paper>
 
             {/* ورودی پیام */}
@@ -140,14 +176,14 @@ function ScenarioComments({ scenarioId, currentUser }) {
                     disabled={sending}
                     multiline
                     maxRows={3}
-                    inputProps={{ style: { textAlign: 'right', direction: 'rtl' } }}
+                    inputProps={{style: {textAlign: 'right', direction: 'rtl'}}}
                     sx={{
                         // ✅ استایل داینامیک اینپوت
                         bgcolor: theme.palette.background.paper,
                         borderRadius: 1,
                         '& .MuiOutlinedInput-root': {
-                            '& fieldset': { borderColor: theme.palette.divider },
-                            '&:hover fieldset': { borderColor: theme.palette.text.primary }
+                            '& fieldset': {borderColor: theme.palette.divider},
+                            '&:hover fieldset': {borderColor: theme.palette.text.primary}
                         }
                     }}
                 />
@@ -158,11 +194,12 @@ function ScenarioComments({ scenarioId, currentUser }) {
                     sx={{
                         bgcolor: 'primary.main',
                         color: '#fff',
-                        '&:hover': { bgcolor: 'primary.dark' },
+                        '&:hover': {bgcolor: 'primary.dark'},
                         borderRadius: 2, height: 40, width: 40
                     }}
                 >
-                    {sending ? <CircularProgress size={20} color="inherit" /> : <SendIcon fontSize="small" sx={{ transform: 'rotate(180deg)' }} />}
+                    {sending ? <CircularProgress size={20} color="inherit"/> :
+                        <SendIcon fontSize="small" sx={{transform: 'rotate(180deg)'}}/>}
                 </IconButton>
             </Stack>
         </Box>

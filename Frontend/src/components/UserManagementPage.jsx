@@ -1,35 +1,66 @@
 // src/components/UserManagementPage.jsx
-import React, { useState, useEffect, useContext } from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
-    Box, Typography, Paper, Grid, TextField, Button, Table, TableBody, TableCell,
-    TableContainer, TableHead, TableRow, IconButton, Avatar, Chip, Dialog,
-    DialogTitle, DialogContent, DialogActions, Select, MenuItem, InputLabel,
-    FormControl, CircularProgress, useTheme, alpha, Stack, Divider, Alert
+    Alert,
+    alpha,
+    Avatar,
+    Box,
+    Button,
+    Chip,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    FormControl,
+    Grid,
+    IconButton,
+    InputLabel,
+    MenuItem,
+    Paper,
+    Select,
+    Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    TextField,
+    Typography,
+    useTheme
 } from '@mui/material';
 import {
-    Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
-    Search as SearchIcon, Person as PersonIcon, SupervisorAccount as AdminIcon,
-    Brush as DesignIcon, Movie as VideoIcon, EditNote as WriterIcon,
-    ContentCut as EditorIcon, Instagram as SocialIcon
+    Add as AddIcon,
+    Brush as DesignIcon,
+    ContentCut as EditorIcon,
+    Delete as DeleteIcon,
+    Edit as EditIcon,
+    EditNote as WriterIcon,
+    Instagram as SocialIcon,
+    Movie as VideoIcon,
+    Person as PersonIcon,
+    Search as SearchIcon,
+    SupervisorAccount as AdminIcon
 } from '@mui/icons-material';
-import { useSnackbar } from 'notistack';
-import { getUsers, createUser, updateUser, deleteUser } from '../api';
-import { UserContext } from '../App';
-import { useNavigate } from 'react-router-dom';
+import {useSnackbar} from 'notistack';
+import {createUser, deleteUser, getUsers, updateUser} from '../api';
+import {UserContext} from '../App';
+import {useNavigate} from 'react-router-dom';
 
 const ROLE_CONFIG = {
-    admin: { label: 'مدیر کل', color: 'error', icon: <AdminIcon /> },
-    client: { label: 'مشتری', color: 'primary', icon: <PersonIcon /> },
-    writer: { label: 'سناریو نویس', color: 'info', icon: <WriterIcon /> },
-    videographer: { label: 'فیلم‌بردار', color: 'warning', icon: <VideoIcon /> },
-    editor: { label: 'تدوین‌گر', color: 'secondary', icon: <EditorIcon /> },
-    designer: { label: 'گرافیست', color: 'success', icon: <DesignIcon /> },
-    social_admin: { label: 'ادمین پیج', color: 'default', icon: <SocialIcon /> },
+    admin: {label: 'مدیر کل', color: 'error', icon: <AdminIcon/>},
+    client: {label: 'مشتری', color: 'primary', icon: <PersonIcon/>},
+    writer: {label: 'سناریو نویس', color: 'info', icon: <WriterIcon/>},
+    videographer: {label: 'فیلم‌بردار', color: 'warning', icon: <VideoIcon/>},
+    editor: {label: 'تدوین‌گر', color: 'secondary', icon: <EditorIcon/>},
+    designer: {label: 'گرافیست', color: 'success', icon: <DesignIcon/>},
+    social_admin: {label: 'ادمین پیج', color: 'default', icon: <SocialIcon/>},
 };
 
-function UserManagementPage({ mode = 'users' }) {
-    const { user: currentUser } = useContext(UserContext);
-    const { enqueueSnackbar } = useSnackbar();
+function UserManagementPage({mode = 'users'}) {
+    const {user: currentUser} = useContext(UserContext);
+    const {enqueueSnackbar} = useSnackbar();
     const navigate = useNavigate();
     const theme = useTheme(); // ✅ استفاده از تم
 
@@ -53,7 +84,9 @@ function UserManagementPage({ mode = 'users' }) {
         }
     }, [currentUser, navigate]);
 
-    useEffect(() => { fetchUsers(); }, [mode]);
+    useEffect(() => {
+        fetchUsers();
+    }, [mode]);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -65,8 +98,11 @@ function UserManagementPage({ mode = 'users' }) {
             } else {
                 setUsers(allUsers.filter(u => u.role !== 'client'));
             }
-        } catch (err) { enqueueSnackbar('خطا در دریافت کاربران', { variant: 'error' }); }
-        finally { setLoading(false); }
+        } catch (err) {
+            enqueueSnackbar('خطا در دریافت کاربران', {variant: 'error'});
+        } finally {
+            setLoading(false);
+        }
     };
 
     const filteredUsers = users.filter(u =>
@@ -77,10 +113,10 @@ function UserManagementPage({ mode = 'users' }) {
         setError(null);
         if (user) {
             setEditingUser(user);
-            setFormData({ ...user, password: '' });
+            setFormData({...user, password: ''});
         } else {
             setEditingUser(null);
-            setFormData({ username: '', password: '', full_name: '', role: defaultRole, phone_number: '' });
+            setFormData({username: '', password: '', full_name: '', role: defaultRole, phone_number: ''});
         }
         setOpenModal(true);
     };
@@ -90,15 +126,15 @@ function UserManagementPage({ mode = 'users' }) {
         setActionLoading(true);
         setError(null);
         try {
-            const dataToSend = { ...formData };
+            const dataToSend = {...formData};
             if (editingUser && !dataToSend.password) delete dataToSend.password;
 
             if (editingUser) {
                 await updateUser(editingUser.id, dataToSend);
-                enqueueSnackbar('کاربر ویرایش شد', { variant: 'success' });
+                enqueueSnackbar('کاربر ویرایش شد', {variant: 'success'});
             } else {
                 await createUser(dataToSend);
-                enqueueSnackbar('کاربر ایجاد شد', { variant: 'success' });
+                enqueueSnackbar('کاربر ایجاد شد', {variant: 'success'});
             }
             setOpenModal(false);
             fetchUsers();
@@ -115,8 +151,13 @@ function UserManagementPage({ mode = 'users' }) {
 
     const handleDelete = async (id) => {
         if (window.confirm('آیا مطمئن هستید؟')) {
-            try { await deleteUser(id); setUsers(prev => prev.filter(u => u.id !== id)); enqueueSnackbar('حذف شد', { variant: 'success' }); }
-            catch (err) { enqueueSnackbar('خطا در حذف', { variant: 'error' }); }
+            try {
+                await deleteUser(id);
+                setUsers(prev => prev.filter(u => u.id !== id));
+                enqueueSnackbar('حذف شد', {variant: 'success'});
+            } catch (err) {
+                enqueueSnackbar('خطا در حذف', {variant: 'error'});
+            }
         }
     };
 
@@ -131,14 +172,14 @@ function UserManagementPage({ mode = 'users' }) {
     };
 
     const textFieldSx = {
-        '& .MuiInputLabel-root': { color: theme.palette.text.secondary },
+        '& .MuiInputLabel-root': {color: theme.palette.text.secondary},
         '& .MuiOutlinedInput-root': {
             color: theme.palette.text.primary,
-            '& fieldset': { borderColor: theme.palette.divider },
-            '&:hover fieldset': { borderColor: theme.palette.text.primary },
-            '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main },
+            '& fieldset': {borderColor: theme.palette.divider},
+            '&:hover fieldset': {borderColor: theme.palette.text.primary},
+            '&.Mui-focused fieldset': {borderColor: theme.palette.primary.main},
         },
-        '& .MuiSelect-icon': { color: theme.palette.text.primary }
+        '& .MuiSelect-icon': {color: theme.palette.text.primary}
     };
 
     const tableHeadSx = {
@@ -154,13 +195,13 @@ function UserManagementPage({ mode = 'users' }) {
             color: theme.palette.text.primary,
             borderBottom: `1px solid ${theme.palette.divider}`
         },
-        '& tr:hover': { bgcolor: alpha(theme.palette.action.hover, 0.1) }
+        '& tr:hover': {bgcolor: alpha(theme.palette.action.hover, 0.1)}
     };
 
-    if (loading) return <Box p={5} textAlign="center"><CircularProgress /></Box>;
+    if (loading) return <Box p={5} textAlign="center"><CircularProgress/></Box>;
 
     return (
-        <Box sx={{ width: '100%', maxWidth: '1600px', mx: 'auto' }}>
+        <Box sx={{width: '100%', maxWidth: '1600px', mx: 'auto'}}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
                 <Typography variant="h4" fontWeight="900" sx={{
                     color: theme.palette.text.primary,
@@ -168,19 +209,25 @@ function UserManagementPage({ mode = 'users' }) {
                 }}>
                     {mode === 'clients' ? 'مدیریت مشتریان' : 'مدیریت پرسنل'}
                 </Typography>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal()} sx={{ bgcolor: 'primary.main', fontWeight: 'bold', px: 3, py: 1 }}>
+                <Button variant="contained" startIcon={<AddIcon/>} onClick={() => handleOpenModal()}
+                        sx={{bgcolor: 'primary.main', fontWeight: 'bold', px: 3, py: 1}}>
                     افزودن {mode === 'clients' ? 'مشتری' : 'پرسنل'}
                 </Button>
             </Stack>
 
-            <Paper sx={{ ...glassCardSx, p: 3 }}>
-                <Box mb={3} display="flex" alignItems="center" sx={{ bgcolor: alpha(theme.palette.action.hover, 0.05), borderRadius: 2, p: 1, border:`1px solid ${theme.palette.divider}` }}>
-                    <SearchIcon sx={{ color: theme.palette.text.secondary, mr: 1, ml: 1 }} />
+            <Paper sx={{...glassCardSx, p: 3}}>
+                <Box mb={3} display="flex" alignItems="center" sx={{
+                    bgcolor: alpha(theme.palette.action.hover, 0.05),
+                    borderRadius: 2,
+                    p: 1,
+                    border: `1px solid ${theme.palette.divider}`
+                }}>
+                    <SearchIcon sx={{color: theme.palette.text.secondary, mr: 1, ml: 1}}/>
                     <TextField
                         variant="standard"
                         placeholder="جستجو در نام، نام کاربری..."
                         fullWidth
-                        InputProps={{ disableUnderline: true, style: { color: theme.palette.text.primary } }}
+                        InputProps={{disableUnderline: true, style: {color: theme.palette.text.primary}}}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -198,25 +245,38 @@ function UserManagementPage({ mode = 'users' }) {
                         </TableHead>
                         <TableBody sx={tableBodySx}>
                             {filteredUsers.map((u) => {
-                                const roleInfo = ROLE_CONFIG[u.role] || { label: u.role, color: 'default', icon: <PersonIcon/> };
+                                const roleInfo = ROLE_CONFIG[u.role] || {
+                                    label: u.role,
+                                    color: 'default',
+                                    icon: <PersonIcon/>
+                                };
                                 return (
                                     <TableRow key={u.id}>
                                         <TableCell>
                                             <Stack direction="row" alignItems="center" spacing={2}>
-                                                <Avatar src={u.avatar} sx={{ bgcolor: 'primary.main' }}>{u.username[0]}</Avatar>
+                                                <Avatar src={u.avatar}
+                                                        sx={{bgcolor: 'primary.main'}}>{u.username[0]}</Avatar>
                                                 <Box>
-                                                    <Typography variant="body2" fontWeight="bold">{u.full_name || u.username}</Typography>
-                                                    <Typography variant="caption" color="text.secondary">{u.username}</Typography>
+                                                    <Typography variant="body2"
+                                                                fontWeight="bold">{u.full_name || u.username}</Typography>
+                                                    <Typography variant="caption"
+                                                                color="text.secondary">{u.username}</Typography>
                                                 </Box>
                                             </Stack>
                                         </TableCell>
                                         <TableCell>
-                                            <Chip icon={roleInfo.icon} label={roleInfo.label} size="small" sx={{ bgcolor: alpha(theme.palette[roleInfo.color]?.main || theme.palette.grey[500], 0.1), color: theme.palette.text.primary, border: `1px solid ${theme.palette.divider}` }} />
+                                            <Chip icon={roleInfo.icon} label={roleInfo.label} size="small" sx={{
+                                                bgcolor: alpha(theme.palette[roleInfo.color]?.main || theme.palette.grey[500], 0.1),
+                                                color: theme.palette.text.primary,
+                                                border: `1px solid ${theme.palette.divider}`
+                                            }}/>
                                         </TableCell>
                                         <TableCell>{u.phone_number || '---'}</TableCell>
                                         <TableCell>
-                                            <IconButton size="small" onClick={() => handleOpenModal(u)} color="info"><EditIcon /></IconButton>
-                                            <IconButton size="small" onClick={() => handleDelete(u.id)} color="error"><DeleteIcon /></IconButton>
+                                            <IconButton size="small" onClick={() => handleOpenModal(u)}
+                                                        color="info"><EditIcon/></IconButton>
+                                            <IconButton size="small" onClick={() => handleDelete(u.id)}
+                                                        color="error"><DeleteIcon/></IconButton>
                                         </TableCell>
                                     </TableRow>
                                 );
@@ -228,22 +288,43 @@ function UserManagementPage({ mode = 'users' }) {
 
             {/* مودال فرم */}
             <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth
-                PaperProps={{ sx: { bgcolor: theme.palette.background.paper, color: theme.palette.text.primary, borderRadius: 3, border: `1px solid ${theme.palette.divider}`, backdropFilter: 'blur(10px)' } }}
+                    PaperProps={{
+                        sx: {
+                            bgcolor: theme.palette.background.paper,
+                            color: theme.palette.text.primary,
+                            borderRadius: 3,
+                            border: `1px solid ${theme.palette.divider}`,
+                            backdropFilter: 'blur(10px)'
+                        }
+                    }}
             >
                 <DialogTitle sx={{borderBottom: `1px solid ${theme.palette.divider}`}}>
                     {editingUser ? 'ویرایش کاربر' : 'افزودن کاربر جدید'}
                 </DialogTitle>
                 <DialogContent>
-                    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-                        {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
+                    <Box component="form" onSubmit={handleSubmit} sx={{mt: 2}}>
+                        {error && <Alert severity="error" sx={{mb: 2, whiteSpace: 'pre-line'}}>{error}</Alert>}
                         <Grid container spacing={2}>
-                            <Grid item xs={6}><TextField sx={textFieldSx} fullWidth label="نام کاربری (انگلیسی)" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} disabled={!!editingUser} /></Grid>
-                            <Grid item xs={6}><TextField sx={textFieldSx} fullWidth label="رمز عبور" type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} /></Grid>
-                            <Grid item xs={12}><TextField sx={textFieldSx} fullWidth label="نام و نام خانوادگی" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} /></Grid>
+                            <Grid item xs={6}><TextField sx={textFieldSx} fullWidth label="نام کاربری (انگلیسی)"
+                                                         value={formData.username} onChange={e => setFormData({
+                                ...formData,
+                                username: e.target.value
+                            })} disabled={!!editingUser}/></Grid>
+                            <Grid item xs={6}><TextField sx={textFieldSx} fullWidth label="رمز عبور" type="password"
+                                                         value={formData.password} onChange={e => setFormData({
+                                ...formData,
+                                password: e.target.value
+                            })}/></Grid>
+                            <Grid item xs={12}><TextField sx={textFieldSx} fullWidth label="نام و نام خانوادگی"
+                                                          value={formData.full_name} onChange={e => setFormData({
+                                ...formData,
+                                full_name: e.target.value
+                            })}/></Grid>
                             <Grid item xs={12}>
                                 <FormControl fullWidth sx={textFieldSx}>
                                     <InputLabel>نقش کاربری</InputLabel>
-                                    <Select value={formData.role} label="نقش کاربری" onChange={e => setFormData({...formData, role: e.target.value})}>
+                                    <Select value={formData.role} label="نقش کاربری"
+                                            onChange={e => setFormData({...formData, role: e.target.value})}>
                                         {mode === 'clients' ? <MenuItem value="client">مشتری (Client)</MenuItem> :
                                             Object.keys(ROLE_CONFIG).filter(r => r !== 'client').map(role => (
                                                 <MenuItem key={role} value={role}>{ROLE_CONFIG[role].label}</MenuItem>
@@ -252,14 +333,19 @@ function UserManagementPage({ mode = 'users' }) {
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12}><TextField sx={textFieldSx} fullWidth label="شماره تماس" value={formData.phone_number} onChange={e => setFormData({...formData, phone_number: e.target.value})} /></Grid>
+                            <Grid item xs={12}><TextField sx={textFieldSx} fullWidth label="شماره تماس"
+                                                          value={formData.phone_number} onChange={e => setFormData({
+                                ...formData,
+                                phone_number: e.target.value
+                            })}/></Grid>
                         </Grid>
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                <DialogActions sx={{p: 2, borderTop: `1px solid ${theme.palette.divider}`}}>
                     <Button onClick={() => setOpenModal(false)} color="inherit">انصراف</Button>
-                    <Button onClick={handleSubmit} variant="contained" sx={{ bgcolor: 'primary.main', fontWeight:'bold' }} disabled={actionLoading}>
-                        {actionLoading ? <CircularProgress size={24} /> : 'ذخیره'}
+                    <Button onClick={handleSubmit} variant="contained"
+                            sx={{bgcolor: 'primary.main', fontWeight: 'bold'}} disabled={actionLoading}>
+                        {actionLoading ? <CircularProgress size={24}/> : 'ذخیره'}
                     </Button>
                 </DialogActions>
             </Dialog>

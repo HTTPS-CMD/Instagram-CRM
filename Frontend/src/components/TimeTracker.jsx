@@ -1,12 +1,12 @@
 // src/components/TimeTracker.jsx
-import React, { useState, useEffect } from 'react';
-import { IconButton, Box, Typography, CircularProgress, Tooltip, useTheme, alpha } from '@mui/material';
-import { PlayArrow, Stop } from '@mui/icons-material';
-import { startTimeLog, stopTimeLog, getCurrentTimeLog } from '../api';
-import { useSnackbar } from 'notistack';
+import React, {useEffect, useState} from 'react';
+import {alpha, Box, CircularProgress, IconButton, Tooltip, Typography, useTheme} from '@mui/material';
+import {PlayArrow, Stop} from '@mui/icons-material';
+import {getCurrentTimeLog, startTimeLog, stopTimeLog} from '../api';
+import {useSnackbar} from 'notistack';
 
-function TimeTracker({ taskId, onStatusChange }) {
-    const { enqueueSnackbar } = useSnackbar();
+function TimeTracker({taskId, onStatusChange}) {
+    const {enqueueSnackbar} = useSnackbar();
     const theme = useTheme(); // ✅ استفاده از تم
     const [loading, setLoading] = useState(false);
     const [activeLog, setActiveLog] = useState(null);
@@ -38,7 +38,9 @@ function TimeTracker({ taskId, onStatusChange }) {
             } else {
                 setActiveLog(null);
             }
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const handleToggle = async () => {
@@ -49,22 +51,22 @@ function TimeTracker({ taskId, onStatusChange }) {
                 await stopTimeLog("پایان کار");
                 setActiveLog(null);
                 setDuration(0);
-                enqueueSnackbar('تایمر متوقف شد', { variant: 'info' });
+                enqueueSnackbar('تایمر متوقف شد', {variant: 'info'});
             } else {
                 // شروع (اول چک میکنیم تایمر دیگه‌ای روشن نباشه)
                 const current = await getCurrentTimeLog();
                 if (current.data) {
-                    enqueueSnackbar('شما روی یک تسک دیگر فعال هستید! اول آن را متوقف کنید.', { variant: 'warning' });
+                    enqueueSnackbar('شما روی یک تسک دیگر فعال هستید! اول آن را متوقف کنید.', {variant: 'warning'});
                     setLoading(false);
                     return;
                 }
                 const res = await startTimeLog(taskId);
                 setActiveLog(res.data);
-                enqueueSnackbar('تایمر شروع شد ⏱️', { variant: 'success' });
+                enqueueSnackbar('تایمر شروع شد ⏱️', {variant: 'success'});
             }
-            if(onStatusChange) onStatusChange();
+            if (onStatusChange) onStatusChange();
         } catch (err) {
-            enqueueSnackbar('خطا در تغییر وضعیت', { variant: 'error' });
+            enqueueSnackbar('خطا در تغییر وضعیت', {variant: 'error'});
         } finally {
             setLoading(false);
         }
@@ -74,7 +76,7 @@ function TimeTracker({ taskId, onStatusChange }) {
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
         const s = seconds % 60;
-        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
     const isActive = activeLog && activeLog.task === taskId;
@@ -82,7 +84,8 @@ function TimeTracker({ taskId, onStatusChange }) {
     return (
         <Box display="flex" alignItems="center">
             {isActive && (
-                <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'success.main', mr: 1, fontWeight: 'bold' }}>
+                <Typography variant="caption"
+                            sx={{fontFamily: 'monospace', color: 'success.main', mr: 1, fontWeight: 'bold'}}>
                     {formatTime(duration)}
                 </Typography>
             )}
@@ -102,8 +105,8 @@ function TimeTracker({ taskId, onStatusChange }) {
                         }
                     }}
                 >
-                    {loading ? <CircularProgress size={16} color="inherit" /> : (
-                        isActive ? <Stop fontSize="small" /> : <PlayArrow fontSize="small" />
+                    {loading ? <CircularProgress size={16} color="inherit"/> : (
+                        isActive ? <Stop fontSize="small"/> : <PlayArrow fontSize="small"/>
                     )}
                 </IconButton>
             </Tooltip>

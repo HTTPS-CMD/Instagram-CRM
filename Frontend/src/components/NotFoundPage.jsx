@@ -1,22 +1,37 @@
 // src/components/NotFoundPage.jsx
 import React from 'react';
-import { Box, Typography, Button, Container, Stack, Paper } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { KeyboardBackspace as BackIcon, Explore as ExploreIcon } from '@mui/icons-material';
-import { keyframes } from '@emotion/react';
+import {Box, Button, Container, Paper, Stack, Typography} from '@mui/material';
+import {useNavigate} from 'react-router-dom';
+import {Explore as ExploreIcon, KeyboardBackspace as BackIcon} from '@mui/icons-material';
+import {keyframes} from '@emotion/react';
 
 // 1. تعریف انیمیشن شناور (Floating Animation)
 const float = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
-  100% { transform: translateY(0px); }
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
 `;
 
 // 2. تعریف انیمیشن درخشش (Glow Animation)
 const pulse = keyframes`
-  0% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.05); }
-  100% { opacity: 0.4; transform: scale(1); }
+    0% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
 `;
 
 const NotFoundPage = () => {
@@ -44,22 +59,22 @@ const NotFoundPage = () => {
                 background: 'linear-gradient(45deg, #3da9fc, #8e44ad)',
                 filter: 'blur(120px)', opacity: 0.4, borderRadius: '50%',
                 animation: `${pulse} 8s infinite ease-in-out`, zIndex: 0
-            }} />
-             <Box sx={{
+            }}/>
+            <Box sx={{
                 position: 'absolute', bottom: '10%', right: '10%',
                 width: '250px', height: '250px',
                 background: 'linear-gradient(45deg, #ff4081, #ff6b6b)',
                 filter: 'blur(100px)', opacity: 0.3, borderRadius: '50%',
                 animation: `${pulse} 10s infinite ease-in-out reverse`, zIndex: 0
-            }} />
+            }}/>
 
 
-            <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+            <Container maxWidth="md" sx={{position: 'relative', zIndex: 1}}>
                 {/* --- باکس شیشه‌ای محتوا (Glassmorphism Card) --- */}
                 <Paper
                     elevation={0}
                     sx={{
-                        p: { xs: 4, md: 6 },
+                        p: {xs: 4, md: 6},
                         textAlign: 'center',
                         // افکت شیشه‌ای
                         backdropFilter: 'blur(16px)',
@@ -74,7 +89,7 @@ const NotFoundPage = () => {
                         <Typography
                             variant="h1"
                             sx={{
-                                fontSize: { xs: '8rem', md: '12rem' },
+                                fontSize: {xs: '8rem', md: '12rem'},
                                 fontWeight: 900,
                                 lineHeight: 1,
                                 // ساختن متن گرادینت
@@ -92,21 +107,27 @@ const NotFoundPage = () => {
                         </Typography>
 
                         <Box>
-                            <Typography variant="h4" fontWeight="bold" textAlign={"center"} gutterBottom sx={{color: '#fff'}}>
+                            <Typography variant="h4" fontWeight="bold" textAlign={"center"} gutterBottom
+                                        sx={{color: '#fff'}}>
                                 اوپس! اینجا بن‌بسته.
                             </Typography>
-                            <Typography variant="h6" textAlign={"center"} sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 'normal', maxWidth: 500, mx: 'auto' }}>
+                            <Typography variant="h6" textAlign={"center"} sx={{
+                                color: 'rgba(255,255,255,0.6)',
+                                fontWeight: 'normal',
+                                maxWidth: 500,
+                                mx: 'auto'
+                            }}>
                                 به نظر می‌رسه صفحه‌ای که دنبالش می‌گردی وجود نداره یا آدرس رو اشتباه تایپ کردی.
                             </Typography>
                         </Box>
 
                         {/* --- دکمه‌ها --- */}
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mt={2}>
+                        <Stack direction={{xs: 'column', sm: 'row'}} spacing={2} mt={2}>
                             {/* دکمه بازگشت (صفحه قبل) */}
                             <Button
                                 variant="outlined"
                                 size="large"
-                                startIcon={<BackIcon />}
+                                startIcon={<BackIcon/>}
                                 onClick={() => navigate(-1)}
                                 sx={{
                                     borderRadius: 3,
@@ -127,7 +148,7 @@ const NotFoundPage = () => {
                             <Button
                                 variant="contained"
                                 size="large"
-                                startIcon={<ExploreIcon />}
+                                startIcon={<ExploreIcon/>}
                                 onClick={() => navigate('/dashboard')}
                                 sx={{
                                     borderRadius: 3,
