@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-+3nnd*ge_853xo#3=wpx-14ss@(qn72)q(v(p+kps6gvwpep%k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*', '51.178.195.159']
 
 
 # Application definition
@@ -61,8 +61,8 @@ MIDDLEWARE = [
     # 'rest_framework_simplejwt',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    # True
+CORS_ALLOWED_ORIGINS = [ True,
+
     "http://localhost:3000",  # این برای create-react-app بود
     "http://127.0.0.1:3000",
     "http://localhost:5173",  # <-- این خط را برای Vite اضافه کنید
