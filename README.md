@@ -26,80 +26,72 @@ The project uses a **Decoupled (Headless) Architecture**:
 If you want to run the project on your local machine for development:
 
 1. **Backend:**
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate  # Or venv\Scripts\activate on Windows
-   pip install -r requirements.txt
-   python manage.py migrate
-   python manage.py runserver
-Frontend:
-   ```bash
-cd frontend
-npm install
-npm run dev
-   ```
-🌍 How to Run on a Server (Production)
+        cd backend
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        python manage.py migrate
+        python manage.py runserver
+
+2. **Frontend:**
+        cd frontend
+        npm install
+        npm run dev
+
+### 🌍 How to Run on a Server (Production)
 The project is completely Dockerized for seamless production deployment.
 
 1. Clone the repository on your server.
-
-2. Create your .env files based on .env.example.
-
+2. Create your `.env` files based on `.env.example`.
 3. Run the following command:
-```bash
-docker-compose up -d --build
-   ```
-Note: The Dockerfiles are optimized to bypass network restrictions (using alternative registries like Liara/Abrha for npm) ensuring smooth builds on any server.
+        docker-compose up -d --build
 
-مستندات فارسی 🇮🇷
+*Note: The Dockerfiles are optimized to bypass network restrictions (using alternative registries like Liara/Abrha for npm) ensuring smooth builds on any server.*
 
-🎯 این پروژه برای چه کسانی است؟
-این سیستم به طور خاص برای صاحبان کسب‌وکارهای اینستاگرامی، آنلاین‌شاپ‌ها و آژانس‌های دیجیتال مارکتینگ طراحی شده است. مدیریت صدها دایرکت، پیگیری سفارشات و هماهنگی بین اعضای تیم (مدیران، فروشندگان، پشتیبانی) معمولاً بسیار پیچیده است.
+---
 
-این CRM با ارائه یک داشبورد جامع برای رهگیری تعاملات مشتریان، مدیریت سطح دسترسی پرسنل، ارجاع وظایف و بررسی قیف فروش، این نیازها را به طور کامل برطرف می‌کند..
+## 🇮🇷 مستندات فارسی
 
-🏗️ معماری سیستم و نحوه کارکرد
-این پروژه بر اساس معماری تفکیک‌شده (Decoupled) توسعه یافته است:
+### 🎯 این پروژه برای چه کسانی است؟
+این سیستم به طور خاص برای **صاحبان کسب‌وکارهای اینستاگرامی، آنلاین‌شاپ‌ها و آژانس‌های دیجیتال مارکتینگ** طراحی شده است. مدیریت صدها دایرکت، پیگیری سفارشات و هماهنگی بین اعضای تیم (مدیران، فروشندگان، پشتیبانی) معمولاً بسیار پیچیده است.
 
-فرانت‌اند (React + Vite): یک اپلیکیشن تک‌صفحه‌ای (SPA) که رابط کاربری بسیار سریع و تعاملی را فراهم می‌کند. ارتباط این بخش با بک‌اند صرفاً از طریق فراخوانی APIها انجام می‌شود.
+این CRM با ارائه یک داشبورد جامع برای رهگیری تعاملات مشتریان، مدیریت سطح دسترسی پرسنل، ارجاع وظایف و بررسی قیف فروش، این نیازها را به طور کامل برطرف می‌کند.
 
-بک‌اند (Django + DRF): هسته مرکزی سیستم که منطق تجاری، مدیریت دیتابیس و کنترل دسترسی‌های نقش‌محور (Role-based) را بر عهده دارد.
+### 🏗️ معماری سیستم و نحوه کارکرد
+این پروژه بر اساس **معماری تفکیک‌شده (Decoupled)** توسعه یافته است:
 
-احراز هویت: استفاده از توکن‌های امن و بدون حالت JWT.
+* **فرانت‌اند (React + Vite):** یک اپلیکیشن تک‌صفحه‌ای (SPA) که رابط کاربری بسیار سریع و تعاملی را فراهم می‌کند. ارتباط این بخش با بک‌اند صرفاً از طریق فراخوانی APIها انجام می‌شود.
+* **بک‌اند (Django + DRF):** هسته مرکزی سیستم که منطق تجاری، مدیریت دیتابیس و کنترل دسترسی‌های نقش‌محور (Role-based) را بر عهده دارد.
+* **احراز هویت:** استفاده از توکن‌های امن و بدون حالت **JWT**.
+* **زیرساخت و دیپلوی (Docker + Nginx):** تمام بخش‌های پروژه کانتینرایز شده‌اند. انجینکس (Nginx) به عنوان Reverse Proxy عمل کرده و ترافیک را مدیریت می‌کند.
 
-زیرساخت و دیپلوی (Docker + Nginx): تمام بخش‌های پروژه کانتینرایز شده‌اند. انجینکس (Nginx) به عنوان Reverse Proxy عمل کرده و ترافیک را مدیریت می‌کند.
+### 🛠️ تکنولوژی‌های استفاده شده
+* **فرانت‌اند:** React.js, Vite, Material-UI (MUI), Axios, FullCalendar
+* **بک‌اند:** Python 3, Django 5, Django REST Framework, SimpleJWT
+* **دواپس و زیرساخت:** Docker, Docker Compose, Nginx (بهینه‌شده برای سرورهای ایران‌اکسس و دور زدن تحریم‌ها با میرورهای جایگزین)
 
-🛠️ تکنولوژی‌های استفاده شده
-فرانت‌اند: React.js, Vite, Material-UI (MUI), Axios, FullCalendar
-
-بک‌اند: Python 3, Django 5, Django REST Framework, SimpleJWT
-
-دواپس و زیرساخت: Docker, Docker Compose, Nginx (بهینه‌شده برای سرورهای ایران‌اکسس و دور زدن تحریم‌ها با میرورهای جایگزین)
-
-🚀 نحوه اجرا روی سیستم شخصی (توسعه)
+### 🚀 نحوه اجرا روی سیستم شخصی (توسعه)
 برای اجرای پروژه روی لپ‌تاپ جهت توسعه و تغییرات:
 
-۱. بک‌اند:
+۱. **بک‌اند:**
+        cd backend
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        python manage.py migrate
+        python manage.py runserver
 
-Bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # در ویندوز: venv\Scripts\activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-۲. فرانت‌اند:
+۲. **فرانت‌اند:**
+        cd frontend
+        npm install
+        npm run dev
 
-Bash
-cd frontend
-npm install
-npm run dev
-🌍 نحوه اجرا روی سرور (پروداکشن)
+### 🌍 نحوه اجرا روی سرور (پروداکشن)
 این پروژه برای اجرای سریع و بدون دردسر روی سرورهای واقعی داکرایز شده است:
-۱. پروژه را روی سرور Clone کنید.
-۲. متغیرهای محیطی (.env) خود را تنظیم کنید.
-۳. دستور زیر را اجرا کنید:
 
-Bash
-docker-compose up -d --build
+۱. پروژه را روی سرور Clone کنید.
+۲. متغیرهای محیطی (`.env`) خود را تنظیم کنید.
+۳. دستور زیر را اجرا کنید:
+        docker-compose up -d --build
+
+*(نکته: فایل‌های Dockerfile به گونه‌ای تنظیم شده‌اند که مشکلات تحریم و اینترنت داخلی - ایران‌اکسس - را با استفاده از رجیستری‌های جایگزین برای npm دور بزنند و بیلد با موفقیت انجام شود).*
