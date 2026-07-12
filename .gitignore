@@ -3,3 +3,5 @@ Frontend/node_modules/
 Frontend/dist/
 __pycache__/
 *.pyc
+.DS_Store
+.idea/
