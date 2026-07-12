@@ -596,11 +596,20 @@ function ProjectDetailPage() {
             {visibleTabs[currentTab]?.id === 'tasks' && (
                 <TabPanel value={currentTab} index={currentTab}><TaskKanban projectId={projectId}/></TabPanel>)}
 
-            <Dialog open={openEventModal} onClose={() => setOpenEventModal(false)} maxWidth="sm" fullWidth>
+            {/* --- اصلاح بخش مودال ایجاد رویداد --- */}
+            {/* اضافه کردن propهای required مثل selectedDate */}
+            <Dialog open={openEventModal} onClose={() => setOpenEventModal(false)} maxWidth="md" fullWidth>
                 <DialogTitle sx={{bgcolor: 'primary.main', color: 'white'}}>رویداد جدید</DialogTitle>
-                <DialogContent dividers>
-                    <CalendarEventForm projectId={projectId} onEventCreated={handleEventCreated}
-                                       onCancel={() => setOpenEventModal(false)}/>
+                <DialogContent sx={{p: 2}}>
+                    {openEventModal && (
+                        <CalendarEventForm
+                            open={openEventModal} // ✅ این پراپ رو حتما لازم داره
+                            onClose={() => setOpenEventModal(false)} // ✅ برای بستن
+                            projectId={Number(projectId)}
+                            selectedDate={new Date()} // تاریخ امروز
+                            onEventCreated={handleEventCreated}
+                        />
+                    )}
                 </DialogContent>
             </Dialog>
 

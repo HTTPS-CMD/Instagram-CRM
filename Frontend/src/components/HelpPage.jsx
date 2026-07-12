@@ -1,16 +1,27 @@
 // src/components/HelpPage.jsx
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
-    Accordion, AccordionDetails, AccordionSummary, Box, Container, Grid,
-    InputAdornment, Paper, TextField, Typography, useTheme, alpha, Chip
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    alpha,
+    Box,
+    Chip,
+    Container,
+    Grid,
+    InputAdornment,
+    Paper,
+    TextField,
+    Typography,
+    useTheme
 } from '@mui/material';
 import {
     ExpandMore as ExpandMoreIcon,
-    Search as SearchIcon,
     HelpOutline as HelpIcon,
     School as SchoolIcon,
-    VideoLibrary as VideoIcon,
-    SupportAgent as SupportIcon
+    Search as SearchIcon,
+    SupportAgent as SupportIcon,
+    VideoLibrary as VideoIcon
 } from '@mui/icons-material';
 
 const faqs = [
@@ -50,7 +61,7 @@ const HelpPage = () => {
     );
 
     return (
-        <Container maxWidth="lg" sx={{ py: 5 }}>
+        <Container maxWidth="lg" sx={{py: 5}}>
             {/* هدر صفحه */}
             <Box textAlign="center" mb={6}>
                 <Typography variant="h3" fontWeight="900" gutterBottom sx={{
@@ -77,9 +88,10 @@ const HelpPage = () => {
                         onChange={(e) => setSearch(e.target.value)}
                         InputProps={{
                             disableUnderline: true,
-                            startAdornment: (<InputAdornment position="start"><SearchIcon color="primary" /></InputAdornment>)
+                            startAdornment: (
+                                <InputAdornment position="start"><SearchIcon color="primary"/></InputAdornment>)
                         }}
-                        sx={{ px: 2 }}
+                        sx={{px: 2}}
                     />
                 </Paper>
             </Box>
@@ -87,15 +99,34 @@ const HelpPage = () => {
             {/* کارت‌های دسترسی سریع */}
             <Grid container spacing={3} mb={6}>
                 {[
-                    { title: 'راهنمای شروع', icon: <SchoolIcon />, color: '#4caf50', desc: 'آموزش گام‌به‌گام برای تازه‌واردها' },
-                    { title: 'ویدیوهای آموزشی', icon: <VideoIcon />, color: '#f44336', desc: 'ویدیوهای کوتاه از نحوه کار با پنل' },
-                    { title: 'پشتیبانی فنی', icon: <SupportIcon />, color: '#ff9800', desc: 'تماس با تیم فنی در صورت بروز مشکل' },
+                    {
+                        title: 'راهنمای شروع',
+                        icon: <SchoolIcon/>,
+                        color: '#4caf50',
+                        desc: 'آموزش گام‌به‌گام برای تازه‌واردها'
+                    },
+                    {
+                        title: 'ویدیوهای آموزشی',
+                        icon: <VideoIcon/>,
+                        color: '#f44336',
+                        desc: 'ویدیوهای کوتاه از نحوه کار با پنل'
+                    },
+                    {
+                        title: 'پشتیبانی فنی',
+                        icon: <SupportIcon/>,
+                        color: '#ff9800',
+                        desc: 'تماس با تیم فنی در صورت بروز مشکل'
+                    },
                 ].map((item, i) => (
                     <Grid item xs={12} md={4} key={i}>
                         <Paper sx={{
                             p: 3, borderRadius: 4, textAlign: 'center', cursor: 'pointer',
                             transition: '0.3s', border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                            '&:hover': { transform: 'translateY(-5px)', boxShadow: theme.shadows[6], borderColor: item.color }
+                            '&:hover': {
+                                transform: 'translateY(-5px)',
+                                boxShadow: theme.shadows[6],
+                                borderColor: item.color
+                            }
                         }}>
                             <Box sx={{
                                 width: 60, height: 60, borderRadius: '50%', mx: 'auto', mb: 2,
@@ -113,7 +144,7 @@ const HelpPage = () => {
 
             {/* بخش سوالات متداول (FAQ) */}
             <Typography variant="h5" fontWeight="bold" mb={3} display="flex" alignItems="center">
-                <HelpIcon sx={{ mr: 1, color: 'primary.main' }} /> سوالات متداول
+                <HelpIcon sx={{mr: 1, color: 'primary.main'}}/> سوالات متداول
             </Typography>
 
             <Box>
@@ -122,16 +153,20 @@ const HelpPage = () => {
                         mb: 2, borderRadius: '16px !important',
                         bgcolor: alpha(theme.palette.background.paper, 0.5),
                         backdropFilter: 'blur(10px)', border: `1px solid ${theme.palette.divider}`,
-                        boxShadow: 'none', '&:before': { display: 'none' }
+                        boxShadow: 'none', '&:before': {display: 'none'}
                     }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <Box display="flex" alignItems="center" gap={2}>
-                                <Chip label={faq.category} size="small" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 'bold' }} />
+                                <Chip label={faq.category} size="small" sx={{
+                                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                    color: 'primary.main',
+                                    fontWeight: 'bold'
+                                }}/>
                                 <Typography fontWeight="bold">{faq.question}</Typography>
                             </Box>
                         </AccordionSummary>
                         <AccordionDetails>
-                            <Typography color="text.secondary" sx={{ lineHeight: 1.8 }}>
+                            <Typography color="text.secondary" sx={{lineHeight: 1.8}}>
                                 {faq.answer}
                             </Typography>
                         </AccordionDetails>

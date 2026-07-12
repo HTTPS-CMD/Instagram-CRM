@@ -552,7 +552,7 @@ function SystemSettingsPage() {
                         )}
                     </TabPanel>
                 </Box>
-                <ThemeSettings />
+                <ThemeSettings/>
             </Paper>
         </Box>
     );

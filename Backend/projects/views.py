@@ -1,19 +1,19 @@
 # backend/projects/views.py
+import json
+
 import openpyxl
 import requests
-import json
+from django.contrib.auth import get_user_model
+from django.db.models import Sum, Q
 from django.http import HttpResponse
-from rest_framework import viewsets, permissions, filters, status
-from rest_framework.decorators import action
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, permissions, filters
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.db.models import Sum, Q
-from rest_framework.permissions import AllowAny
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-import time
-from django.contrib.auth import get_user_model
-from django.utils import timezone
 
 # ایمپورت مدل‌ها
 from .models import (
@@ -23,9 +23,8 @@ from .models import (
     ChatRoom, ChatMessage,
     PaymentMethod, AgencyInfo, Package,
     ExtraService, ServiceRequest, AgencyFile, TargetAudience, Task, FileComment, StickyNote,
-    WorkflowRule, TimeLog, SharedLink, DashboardConfig, Lead,
+    WorkflowRule, TimeLog, SharedLink, DashboardConfig, Lead,PersonnelLog
 )
-
 # ایمپورت سریالایزرها
 from .serializers import (
     ProjectListSerializer, ProjectDetailSerializer, ProjectSerializer,
@@ -38,7 +37,8 @@ from .serializers import (
     ExtraServiceSerializer, ServiceRequestSerializer, GlobalCalendarEventSerializer, AgencyFileSerializer,
     TargetAudienceSerializer, TaskSerializer, FileCommentSerializer, StickyNoteSerializer, WorkflowRuleSerializer,
     TimeLogSerializer, SharedLinkSerializer,
-    DashboardConfigSerializer, LeadSerializer
+    LeadSerializer,
+    PersonnelLogSerializer
 )
 
 User = get_user_model()
@@ -254,7 +254,7 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         project = get_object_or_404(Project, pk=self.kwargs.get('project_pk'))
         serializer.save(project=project)
- 
+
 
 class WeeklyReportViewSet(viewsets.ModelViewSet):
     serializer_class = WeeklyReportSerializer
@@ -306,7 +306,7 @@ class ProjectPaymentViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [permissions.IsAuthenticated(), IsAdminUser()]
-        return [permissions.IsAuthenticated(), IsProjectTeamMember()]
+        return [permissions.IsAuthenticated(), IsClientOrAdminForFinance()]
 
 
 class ProjectExpenseViewSet(viewsets.ModelViewSet):
@@ -378,8 +378,8 @@ class DashboardStatsView(APIView):
             my_projects = Project.objects.filter(client_user=user)
             active_count = my_projects.filter(is_started=True).count()
             total_paid = \
-            ProjectPayment.objects.filter(project__in=my_projects, is_paid=True).aggregate(sum=Sum('amount'))[
-                'sum'] or 0
+                ProjectPayment.objects.filter(project__in=my_projects, is_paid=True).aggregate(sum=Sum('amount'))[
+                    'sum'] or 0
             total_contract = my_projects.aggregate(sum=Sum('contract_amount'))['sum'] or 0
             total_due = total_contract - total_paid
 
@@ -800,22 +800,31 @@ class TargetAudienceAIView(APIView):
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
-    search_fields = ['title', 'description']
-    ordering_fields = ['due_date', 'priority', 'created_at']
-    filterset_fields = ['status', 'priority', 'assigned_to']
+    permission_classes = [permissions.IsAuthenticated]
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+
+    # Ensure these fields actually exist in your Task model
+    filterset_fields = ['project', 'status', 'assigned_to', 'is_extra_mile', 'difficulty_level', 'priority']
+    search_fields = ['title']
+    ordering_fields = ['kpi_points', 'difficulty_level', 'status', 'priority']
 
     def get_queryset(self):
-        project_id = self.kwargs.get('project_pk')
-        if project_id:
-            return Task.objects.filter(project_id=project_id)
-        return Task.objects.all()
+        user = self.request.user
+        if user.role == 'admin':
+            # Check for project_pk from nested router
+            if 'project_pk' in self.kwargs:
+                return Task.objects.filter(project_id=self.kwargs['project_pk'])
+            return Task.objects.all()
+        else:
+            return Task.objects.filter(
+                Q(assigned_to=user) | Q(project__client_user=user)
+            )
 
     def perform_create(self, serializer):
         project_id = self.kwargs.get('project_pk')
         if project_id:
-            project = get_object_or_404(Project, pk=project_id)
-            serializer.save(project=project)
+            serializer.save(project_id=project_id)
         else:
             serializer.save()
 
@@ -841,7 +850,7 @@ class GlobalSearchView(APIView):
 
         if is_admin:
             users = User.objects.filter(Q(username__icontains=query) | Q(full_name__icontains=query), is_deleted=False)[
-                    :5]
+                :5]
             for u in users:
                 results.append({"type": "user", "title": u.full_name or u.username, "subtitle": u.get_role_display(),
                                 "link": "/users"})
@@ -994,3 +1003,182 @@ class LeadViewSet(viewsets.ModelViewSet):
     queryset = Lead.objects.all().order_by('-created_at')
     serializer_class = LeadSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def personnel_performance_report(request):
+    """
+    گزارش جامع عملکرد پرسنل (OKR & KPI Report)
+    """
+    # مدیر همه را می‌بیند، پرسنل عادی فقط خودشان را
+    if request.user.role == 'admin':
+        users = User.objects.filter(is_active=True).exclude(is_superuser=True)
+    else:
+        users = [request.user]
+
+    report = []
+
+    # پارامترهای تاریخ (اختیاری - برای فیلتر ماهانه)
+    month = request.query_params.get('month')  # مثلا 2024-02
+
+    for user in users:
+        # گرفتن تمام تسک‌های انجام شده (Done)
+        tasks_query = Task.objects.filter(
+            assigned_to=user,
+            status='done'
+        )
+
+        # اگر فیلتر ماهانه بخواهیم (بر اساس completed_at)
+        if month:
+            tasks_query = tasks_query.filter(completed_at__startswith=month)
+
+        completed_tasks = tasks_query.all()
+
+        total_tasks_count = completed_tasks.count()
+        total_score = 0
+        extra_mile_score = 0
+
+        for task in completed_tasks:
+            score = task.final_score
+            total_score += score
+            if task.is_extra_mile:
+                extra_mile_score += score
+
+        # هدف ماهانه (Hardcode شده یا از دیتابیس تنظیمات خوانده شود)
+        monthly_target = 500
+        efficiency_rate = (total_score / monthly_target) * 100 if monthly_target > 0 else 0
+
+        # محاسبه پاداش (مثلا هر امتیاز ۵ هزار تومان)
+        reward_per_point = 5000
+        reward_amount = total_score * reward_per_point
+
+        report.append({
+            'user_id': user.id,
+            'username': user.username,
+            'role': user.role,
+            'avatar': user.profile_picture.url if user.profile_picture else None,
+            'total_tasks': total_tasks_count,
+            'total_score': total_score,  # مجموع امتیاز KPI
+            'extra_mile_score': extra_mile_score,  # امتیاز کارهای مازاد
+            'efficiency': round(efficiency_rate, 1),  # درصد بازدهی
+            'reward_estimate': reward_amount  # پاداش ریالی
+        })
+
+    return Response(report)
+
+
+class PersonnelLogViewSet(viewsets.ModelViewSet):
+    serializer_class = PersonnelLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # جلوگیری از کرش کردن اگر یوزر لاگین نبود (احتیاطی)
+        if not self.request.user.is_authenticated:
+            return PersonnelLog.objects.none()
+
+        if self.request.user.role == 'admin':
+            return PersonnelLog.objects.all().order_by('-date')
+        return PersonnelLog.objects.filter(user=self.request.user).order_by('-date')
+
+    def perform_create(self, serializer):
+        # ثبت خودکار کاربری که لاگ را ایجاد کرده
+        serializer.save(recorded_by=self.request.user)
+
+
+class PerformanceReportViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def monthly_report_card(self, request):
+        user_id = request.query_params.get('user_id')
+        target_month = request.query_params.get('month')  # Format: YYYY-MM
+
+        # اگر ادمین نیست، فقط گزارش خودش را ببیند
+        if request.user.role != 'admin':
+            user_id = request.user.id
+
+        user = get_object_or_404(User, id=user_id)
+
+        # ۱. محاسبه عملکرد تسک‌ها
+        tasks = Task.objects.filter(assigned_to=user, completed_at__startswith=target_month, status='done')
+
+        daily_tasks = tasks.filter(period='daily').count()
+        weekly_tasks = tasks.filter(period='weekly').count()
+        monthly_tasks = tasks.filter(period='monthly').count()
+        project_tasks = tasks.filter(period='project').count()
+
+        total_kpi = sum(t.final_score for t in tasks)
+
+        # ۲. محاسبه گزارش‌های انضباطی و مالی
+        logs = PersonnelLog.objects.filter(user=user, date__startswith=target_month)
+
+        penalties = logs.filter(log_type='penalty')
+        bonuses = logs.filter(log_type='bonus')
+
+        total_financial_loss = penalties.aggregate(Sum('financial_impact'))['financial_impact__sum'] or 0
+        total_value_added = bonuses.aggregate(Sum('financial_impact'))['financial_impact__sum'] or 0
+
+        discipline_score = sum(l.score_impact for l in logs)  # مجموع امتیازات مثبت و منفی دستی
+
+        final_month_score = total_kpi + discipline_score
+
+        # ۳. تولید متن گزارش توصیفی (AI Style)
+        report_text = f"""
+        گزارش عملکرد ماهانه پرسنل: {user.full_name}
+        -------------------------------------------
+        وضعیت وظایف:
+        ایشان در این ماه مجموعاً {tasks.count()} وظیفه را به اتمام رسانده‌اند.
+        تسک‌های روزانه: {daily_tasks} | هفتگی: {weekly_tasks} | پروژه‌ای: {project_tasks}
+
+        عملکرد انضباطی و مالی:
+        مجموع ضرر وارده به سیستم: {total_financial_loss:,} تومان
+        مجموع ارزش افزوده ایجاد شده: {total_value_added:,} تومان
+
+        تحلیل نهایی:
+        امتیاز فنی (KPI) برابر با {total_kpi} و تاثیر انضباطی {discipline_score} می‌باشد.
+        نمره نهایی عملکرد در این ماه: {final_month_score}
+        """
+
+        return Response({
+            'user': UserMiniSerializer(user).data,
+            'stats': {
+                'daily_count': daily_tasks,
+                'weekly_count': weekly_tasks,
+                'project_count': project_tasks,
+                'total_kpi': total_kpi,
+                'financial_loss': total_financial_loss,
+                'value_added': total_value_added,
+                'final_score': final_month_score
+            },
+            'logs': list(logs.values('title', 'log_type', 'financial_impact', 'date')),
+            'written_report': report_text
+        })
+
+
+
+class IsClientOrAdminForFinance(permissions.BasePermission):
+    """
+    پرمیشن اختصاصی برای بخش مالی: فقط ادمین و مشتریِ صاحب پروژه حق دیدن دارند.
+    پرسنل (طراح، ادیتور و...) هیچ دسترسی به این بخش ندارند.
+    """
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        # ادمین همه چیز را می‌بیند
+        if request.user.role == 'admin' or request.user.is_superuser:
+            return True
+        # اگر کاربر مشتری است و این پروژه/فاکتور برای خودش است
+        if hasattr(obj, 'project') and obj.project:
+            return obj.project.client_user == request.user
+        return False
+
+class IsAssignedToTaskOrAdmin(permissions.BasePermission):
+    """
+    پرمیشن تسک‌ها: هر پرسنل فقط تسک خودش را می‌بیند، اما ادمین همه را می‌بیند.
+    """
+    def has_object_permission(self, request, view, obj):
+        if request.user.role == 'admin' or request.user.is_superuser:
+            return True
+        return obj.assigned_to == request.user

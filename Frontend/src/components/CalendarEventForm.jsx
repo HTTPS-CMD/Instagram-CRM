@@ -20,11 +20,13 @@ import jMoment from 'jalali-moment';
 import {createCalendarEvent, createGlobalEvent, getProjects} from '../api';
 import {DatePicker} from '@mui/x-date-pickers/DatePicker';
 
-// ✅ پراپ‌های open و onClose اضافه شدند برای مدیریت پاپ‌آپ
-function CalendarEventForm({open, onClose, projectId, onEventCreated, defaultType}) {
+function CalendarEventForm({open, onClose, projectId, onEventCreated, defaultType, selectedDate}) {
 
     const [formData, setFormData] = useState({
-        title: '', event_date: null, event_type: defaultType || 'post', project: projectId || ''
+        title: '',
+        event_date: null,
+        event_type: defaultType || 'post',
+        project: projectId || ''
     });
 
     const [projects, setProjects] = useState([]);
@@ -38,19 +40,27 @@ function CalendarEventForm({open, onClose, projectId, onEventCreated, defaultTyp
         }
     }, [projectId]);
 
-    // ✅ ریست کردن فرم وقتی پنجره باز می‌شود
+    // ✅ اصلاح مهم: تبدیل تاریخ ورودی به آبجکت jMoment
+    // این کار باعث میشه ارور value.isValid رفع بشه چون jMoment متد isValid داره
     useEffect(() => {
         if (open) {
+            const initialDate = selectedDate ? jMoment(selectedDate) : jMoment();
+
             setFormData({
-                title: '', event_date: null, event_type: defaultType || 'post', project: projectId || ''
+                title: '',
+                event_date: initialDate,
+                event_type: defaultType || 'post',
+                project: projectId || ''
             });
             setLocalError(null);
         }
-    }, [open, defaultType, projectId]);
+    }, [open, defaultType, projectId, selectedDate]);
 
-    const EVENT_TYPES = [{value: 'post', label: 'آپلود پست/ریلز'}, {
-        value: 'filming', label: 'آفیش فیلمبرداری'
-    }, {value: 'meeting', label: 'جلسه (حضوری/آنلاین)'},];
+    const EVENT_TYPES = [
+        {value: 'post', label: 'آپلود پست/ریلز'},
+        {value: 'filming', label: 'آفیش فیلمبرداری'},
+        {value: 'meeting', label: 'جلسه (حضوری/آنلاین)'}
+    ];
 
     const handleChange = (e) => {
         let {name, value} = e.target;
@@ -58,19 +68,16 @@ function CalendarEventForm({open, onClose, projectId, onEventCreated, defaultTyp
     };
 
     const handleDateChange = (newDate) => {
+        // کامپوننت دیت‌پیکر خودش مقدار jMoment برمی‌گردونه
         setFormData(prev => ({...prev, event_date: newDate}));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault(); // اگر فرم سابمیت شد
-        handleSave();
     };
 
     const handleSave = async () => {
         setLoading(true);
         setLocalError(null);
 
-        if (!formData.event_date || !jMoment(formData.event_date).isValid()) {
+        // بررسی ولید بودن تاریخ
+        if (!formData.event_date || !formData.event_date.isValid()) {
             setLocalError('لطفاً یک تاریخ معتبر از تقویم انتخاب کنید.');
             setLoading(false);
             return;
@@ -82,7 +89,6 @@ function CalendarEventForm({open, onClose, projectId, onEventCreated, defaultTyp
             return;
         }
 
-        // بررسی عنوان
         if (!formData.title) {
             setLocalError('عنوان رویداد الزامی است.');
             setLoading(false);
@@ -92,6 +98,7 @@ function CalendarEventForm({open, onClose, projectId, onEventCreated, defaultTyp
         const sendData = {
             title: formData.title,
             event_type: formData.event_type,
+            // تبدیل تاریخ به فرمت میلادی برای ارسال به بک‌اند
             event_date: formData.event_date.locale('en').format('YYYY-MM-DDT12:00:00')
         };
 
@@ -101,12 +108,15 @@ function CalendarEventForm({open, onClose, projectId, onEventCreated, defaultTyp
                 // حالت تکی (داخل پروژه)
                 response = await createCalendarEvent(projectId, sendData);
             } else {
-                // حالت گلوبال (تقویم‌های جداگانه)
+                // حالت گلوبال
                 sendData.project = formData.project;
                 response = await createGlobalEvent(sendData);
             }
-            onEventCreated(response.data); // رفرش کردن تقویم والد
-            onClose(); // بستن مودال
+            // اطلاع به کامپوننت والد برای رفرش کردن لیست
+            if (onEventCreated) {
+                onEventCreated(response.data);
+            }
+            onClose();
         } catch (err) {
             console.error('Event creation failed:', err);
             setLocalError('خطا در ایجاد رویداد.');
@@ -115,7 +125,7 @@ function CalendarEventForm({open, onClose, projectId, onEventCreated, defaultTyp
         }
     };
 
-    return (// ✅ تبدیل به Dialog (پاپ‌آپ)
+    return (
         <Dialog
             open={open}
             onClose={onClose}
@@ -135,7 +145,6 @@ function CalendarEventForm({open, onClose, projectId, onEventCreated, defaultTyp
                 {localError && <Alert severity="error" sx={{mb: 2, mt: 1}}>{localError}</Alert>}
 
                 <Grid container spacing={3} sx={{mt: 0}}>
-                    {/* انتخاب پروژه */}
                     {!projectId && (<Grid item xs={12}>
                         <FormControl fullWidth required>
                             <InputLabel>انتخاب پروژه</InputLabel>

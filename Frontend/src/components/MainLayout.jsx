@@ -1,6 +1,7 @@
 // src/components/MainLayout.jsx
 import CommandPalette from './CommandPalette';
 import React, {useContext, useEffect, useState} from "react";
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import {
     alpha,
     AppBar,
@@ -650,6 +651,12 @@ function MainLayout({children}) {
                                     <ListItemText primary="پرسنل"/>
                                 </ListItemButton>
 
+
+                                <ListItemButton onClick={() => navigate('/performance')}>
+                                    <ListItemIcon><AssessmentIcon/></ListItemIcon> {/* آیکون دلخواه */}
+                                    <ListItemText primary="مدیریت پرسنل"/>
+                                </ListItemButton>
+
                                 <ListItemButton onClick={() => navigate('/financials')}
                                                 selected={location.pathname === '/financials'} sx={menuButtonStyle}>
                                     <ListItemIcon sx={{color: 'inherit', minWidth: 40}}><FinancialIcon/></ListItemIcon>
@@ -667,6 +674,8 @@ function MainLayout({children}) {
                                     <ListItemIcon sx={{color: 'inherit', minWidth: 40}}><HistoryIcon/></ListItemIcon>
                                     <ListItemText primary="گزارش فعالیت‌ها"/>
                                 </ListItemButton>
+
+
                             </>
                         )}
 

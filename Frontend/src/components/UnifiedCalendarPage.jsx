@@ -386,6 +386,7 @@ const UnifiedCalendarPage = ({filterType = null}) => {
                 onEventCreated={handleEventCreated}
                 defaultType={filterType}
                 initialDate={selectedDate ? moment(selectedDate).format('YYYY-MM-DD HH:mm') : ''}
+                selectedDate={selectedDate}
             />
         </Box>
     );

@@ -1,7 +1,9 @@
 # backend/projects/urls.py
 from django.urls import path, include
 from rest_framework_nested import routers
+
 from .views import *
+from .views import PerformanceReportViewSet,PersonnelLogViewSet
 
 standard_router = routers.DefaultRouter()
 # ✅ حل مشکل ارور ValueError در پایتون ۳.۱۳ و جنگو ۵
@@ -39,7 +41,8 @@ standard_router.register(r'tasks', TaskViewSet, basename='all-tasks')
 standard_router.register(r'all-project-files', ProjectFileViewSet, basename='all-project-files')
 standard_router.register(r'all-payments', ProjectPaymentViewSet, basename='all-payments')
 standard_router.register(r'all-expenses', ProjectExpenseViewSet, basename='all-expenses')
-
+standard_router.register(r'personnel-logs', PersonnelLogViewSet, basename='personnel-logs')
+standard_router.register(r'performance-report', PerformanceReportViewSet, basename='performance-report')
 
 projects_router = routers.NestedDefaultRouter(standard_router, r'projects', lookup='project')
 # ✅ حل مشکل ارور برای روتر تو در تو
@@ -60,9 +63,11 @@ urlpatterns = [
     path('', include(standard_router.urls)),
     path('', include(projects_router.urls)),
     path('dashboard-stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
-    path('projects/<int:project_pk>/export-financials/', ProjectFinancialExportView.as_view(), name='export-financials'),
+    path('projects/<int:project_pk>/export-financials/', ProjectFinancialExportView.as_view(),
+         name='export-financials'),
     path('projects/<int:project_pk>/ai-analysis/', ProjectAIAnalysisView.as_view(), name='ai-analysis'),
-    path('projects/<int:project_pk>/generate-scenario/', ProjectScenarioGenerationView.as_view(), name='generate-scenario'),
+    path('projects/<int:project_pk>/generate-scenario/', ProjectScenarioGenerationView.as_view(),
+         name='generate-scenario'),
     path('generate-audience-ai/', TargetAudienceAIView.as_view(), name='generate-audience-ai'),
     path('global-search/', GlobalSearchView.as_view(), name='global-search'),
     path('public/share/<uuid:token>/', PublicFileView.as_view(), name='public-share-view'),

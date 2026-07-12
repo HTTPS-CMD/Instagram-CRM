@@ -4,55 +4,55 @@ import axios from 'axios';
 const API_URL = import.meta.env.DEV ? 'http://127.0.0.1:8000' : '';
 
 const apiClient = axios.create({
-  baseURL: API_URL,
+    baseURL: API_URL,
 });
 
 apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+    (config) => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
 );
 
 apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken) throw new Error("No refresh token available");
+    (response) => {
+        return response;
+    },
+    async (error) => {
+        const originalRequest = error.config;
+        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            try {
+                const refreshToken = localStorage.getItem('refresh_token');
+                if (!refreshToken) throw new Error("No refresh token available");
 
-        const baseURL = API_URL || window.location.origin;
-        const response = await axios.post(`${baseURL}/api/v1/token/refresh/`, {
-          refresh: refreshToken
-        });
+                const baseURL = API_URL || window.location.origin;
+                const response = await axios.post(`${baseURL}/api/v1/token/refresh/`, {
+                    refresh: refreshToken
+                });
 
-        const { access } = response.data;
-        localStorage.setItem('access_token', access);
-        originalRequest.headers['Authorization'] = `Bearer ${access}`;
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+                const {access} = response.data;
+                localStorage.setItem('access_token', access);
+                originalRequest.headers['Authorization'] = `Bearer ${access}`;
+                return apiClient(originalRequest);
+            } catch (refreshError) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            }
+        }
+        return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
 );
 
-export const loginUser = (username, password) => apiClient.post('/api/v1/token/', { username, password });
+export const loginUser = (username, password) => apiClient.post('/api/v1/token/', {username, password});
 
 // Projects
 export const getProjects = () => apiClient.get('/api/v1/projects/');
@@ -77,15 +77,15 @@ export const deleteGlobalEvent = (id) => apiClient.delete(`/api/v1/all-events/${
 
 // Reports
 export const getWeeklyReports = (id) => apiClient.get(`/api/v1/projects/${id}/weekly-reports/`);
-export const updateMonthlyReport = (id, content) => apiClient.patch(`/api/v1/projects/${id}/`, { monthly_report_text: content });
+export const updateMonthlyReport = (id, content) => apiClient.patch(`/api/v1/projects/${id}/`, {monthly_report_text: content});
 export const updateOrCreateWeeklyReport = (pId, week, rId, content) => {
-    if (rId) return apiClient.patch(`/api/v1/projects/${pId}/weekly-reports/${rId}/`, { report_text: content });
-    return apiClient.post(`/api/v1/projects/${pId}/weekly-reports/`, { week_number: week, report_text: content });
+    if (rId) return apiClient.patch(`/api/v1/projects/${pId}/weekly-reports/${rId}/`, {report_text: content});
+    return apiClient.post(`/api/v1/projects/${pId}/weekly-reports/`, {week_number: week, report_text: content});
 };
 
 // Files
 export const getProjectFiles = (id) => apiClient.get(`/api/v1/projects/${id}/files/`);
-export const uploadProjectFile = (id, data) => apiClient.post(`/api/v1/projects/${id}/files/`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const uploadProjectFile = (id, data) => apiClient.post(`/api/v1/projects/${id}/files/`, data, {headers: {'Content-Type': 'multipart/form-data'}});
 export const deleteProjectFile = (pId, fId) => apiClient.delete(`/api/v1/projects/${pId}/files/${fId}/`);
 
 // Users
@@ -96,7 +96,7 @@ export const createUser = (data) => apiClient.post('/api/v1/users/', data);
 export const updateUser = (id, data) => apiClient.patch(`/api/v1/users/${id}/`, data);
 export const deleteUser = (id) => apiClient.delete(`/api/v1/users/${id}/`);
 export const getUserProfile = () => apiClient.get('/api/v1/users/profile/');
-export const updateUserProfile = (data) => apiClient.patch('/api/v1/users/profile/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updateUserProfile = (data) => apiClient.patch('/api/v1/users/profile/', data, {headers: {'Content-Type': 'multipart/form-data'}});
 export const changePassword = (data) => apiClient.post('/api/v1/users/change-password/', data);
 
 // Financials (Project)
@@ -106,7 +106,7 @@ export const deleteProjectPayment = (pId, payId) => apiClient.delete(`/api/v1/pr
 export const getProjectExpenses = (id) => apiClient.get(`/api/v1/projects/${id}/expenses/`);
 export const createProjectExpense = (id, data) => apiClient.post(`/api/v1/projects/${id}/expenses/`, data);
 export const deleteProjectExpense = (pId, exId) => apiClient.delete(`/api/v1/projects/${pId}/expenses/${exId}/`);
-export const exportProjectFinancials = (id) => apiClient.get(`/api/v1/projects/${id}/export-financials/`, { responseType: 'blob' });
+export const exportProjectFinancials = (id) => apiClient.get(`/api/v1/projects/${id}/export-financials/`, {responseType: 'blob'});
 
 // Financials (Agency)
 export const getSalaries = () => apiClient.get('/api/v1/salaries/');
@@ -130,12 +130,12 @@ export const createScenarioComment = (data) => apiClient.post('/api/v1/scenario-
 // Chat
 export const getChatRooms = () => apiClient.get('/api/v1/chat-rooms/');
 export const getChatMessages = (roomId) => apiClient.get(`/api/v1/chat-messages/?room=${roomId}`);
-export const sendChatMessage = (formData) => apiClient.post('/api/v1/chat-messages/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const sendChatMessage = (formData) => apiClient.post('/api/v1/chat-messages/', formData, {headers: {'Content-Type': 'multipart/form-data'}});
 
 // AI
 export const analyzeProjectAI = (projectId) => apiClient.post(`/api/v1/projects/${projectId}/ai-analysis/`);
 export const generateScenarioAI = (projectId, data) => apiClient.post(`/api/v1/projects/${projectId}/generate-scenario/`, data);
-export const generateTargetAudienceAI = (topic) => apiClient.post('/api/v1/generate-audience-ai/', { topic });
+export const generateTargetAudienceAI = (topic) => apiClient.post('/api/v1/generate-audience-ai/', {topic});
 
 // Settings
 export const getPackages = () => apiClient.get('/api/v1/packages/');
@@ -149,8 +149,8 @@ export const updatePaymentMethod = (id, data) => apiClient.patch(`/api/v1/paymen
 export const deletePaymentMethod = (id) => apiClient.delete(`/api/v1/payment-methods/${id}/`);
 
 export const getAgencyInfo = () => apiClient.get('/api/v1/agency-info/');
-export const updateAgencyInfo = (id, data) => apiClient.patch(`/api/v1/agency-info/${id}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const createAgencyInfo = (data) => apiClient.post('/api/v1/agency-info/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updateAgencyInfo = (id, data) => apiClient.patch(`/api/v1/agency-info/${id}/`, data, {headers: {'Content-Type': 'multipart/form-data'}});
+export const createAgencyInfo = (data) => apiClient.post('/api/v1/agency-info/', data, {headers: {'Content-Type': 'multipart/form-data'}});
 
 export const getExtraServices = () => apiClient.get('/api/v1/extra-services/');
 export const createServiceRequest = (data) => apiClient.post('/api/v1/service-requests/', data);
@@ -164,7 +164,7 @@ export const restoreUser = (id) => apiClient.post(`/api/v1/users/${id}/restore/`
 export const hardDeleteUser = (id) => apiClient.delete(`/api/v1/users/${id}/hard_delete/`);
 
 export const getAgencyFiles = () => apiClient.get('/api/v1/agency-files/');
-export const createAgencyFile = (data) => apiClient.post('/api/v1/agency-files/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const createAgencyFile = (data) => apiClient.post('/api/v1/agency-files/', data, {headers: {'Content-Type': 'multipart/form-data'}});
 export const deleteAgencyFile = (id) => apiClient.delete(`/api/v1/agency-files/${id}/`);
 
 export const getTargetAudiences = () => apiClient.get('/api/v1/target-audiences/');
@@ -186,7 +186,14 @@ export const getTicketMessages = (tid) => apiClient.get(`/api/v1/ticket-messages
 export const sendTicketMessage = (data) => apiClient.post('/api/v1/ticket-messages/', data);
 
 // Tasks (Project Specific)
-export const getTasks = (projectId) => apiClient.get(`/api/v1/projects/${projectId}/tasks/`);
+export const getTasks = (projectId) => {
+    // اگر projectId مقدار داشت (مثلا 4)، آدرس پروژه را بزن
+    if (projectId && projectId !== 'null') {
+        return apiClient.get(`/api/v1/projects/${projectId}/tasks/`);
+    }
+    // اگر projectId نال بود، تمام تسک‌ها را از روت عمومی بگیر
+    return apiClient.get('/api/v1/tasks/');
+};
 export const createTask = (projectId, data) => apiClient.post(`/api/v1/projects/${projectId}/tasks/`, data);
 export const updateTask = (projectId, taskId, data) => apiClient.patch(`/api/v1/projects/${projectId}/tasks/${taskId}/`, data);
 export const deleteTask = (projectId, taskId) => apiClient.delete(`/api/v1/projects/${projectId}/tasks/${taskId}/`);
@@ -214,22 +221,29 @@ export const deleteStickyNote = (id) => apiClient.delete(`/api/v1/sticky-notes/$
 
 
 // Time Tracking
-export const startTimeLog = (taskId) => apiClient.post('/api/v1/time-logs/start_timer/', { task_id: taskId });
-export const stopTimeLog = (description) => apiClient.post('/api/v1/time-logs/stop_timer/', { description });
+export const startTimeLog = (taskId) => apiClient.post('/api/v1/time-logs/start_timer/', {task_id: taskId});
+export const stopTimeLog = (description) => apiClient.post('/api/v1/time-logs/stop_timer/', {description});
 export const getCurrentTimeLog = () => apiClient.get('/api/v1/time-logs/current/');
 export const getTaskTimeLogs = (taskId) => apiClient.get(`/api/v1/time-logs/?task_id=${taskId}`);
 
 // Shared Links
-export const generateSharedLink = (fileId) => apiClient.post('/api/v1/shared-links/generate/', { file_id: fileId });
+export const generateSharedLink = (fileId) => apiClient.post('/api/v1/shared-links/generate/', {file_id: fileId});
 export const getPublicFile = (token) => apiClient.get(`/api/v1/public/share/${token}/`);
 export const postPublicComment = (token, data) => apiClient.post(`/api/v1/public/share/${token}/`, data);
 
 
 // Widget Config
 export const getDashboardConfig = () => apiClient.get('/api/v1/dashboard-config/');
-export const saveDashboardConfig = (widgets) => apiClient.post('/api/v1/dashboard-config/', { widgets });
+export const saveDashboardConfig = (widgets) => apiClient.post('/api/v1/dashboard-config/', {widgets});
 
+// دریافت و ثبت لاگ‌های انضباطی/مالی
+export const getPersonnelLogs = () => apiClient.get('/api/v1/personnel-logs/');
+export const createPersonnelLog = (data) => apiClient.post('/api/v1/personnel-logs/', data);
+export const deletePersonnelLog = (id) => apiClient.delete(`/api/v1/personnel-logs/${id}/`);
 
+// دریافت کارنامه ماهانه
+export const getPerformanceReport = (userId, month) =>
+    apiClient.get(`/api/v1/performance-report/monthly_report_card/?user_id=${userId}&month=${month}`);
 
 
 export default apiClient;

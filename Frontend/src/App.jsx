@@ -5,6 +5,8 @@ import {jwtDecode} from 'jwt-decode';
 import {Box, CircularProgress, createTheme, CssBaseline, ThemeProvider, Typography} from '@mui/material';
 import {SnackbarProvider} from 'notistack';
 import {ColorModeContext} from './themeContext';
+import PrivateRoute from './components/PrivateRoute'; // ✅ این خط را اضافه کن
+import PersonnelPerformancePage from './components/PersonnelPerformancePage'; // ✅
 
 // --- 🚀 Lazy Loading Imports ---
 const LoginPage = lazy(() => import('./components/LoginPage'));
@@ -32,6 +34,7 @@ const NotFoundPage = lazy(() => import('./components/NotFoundPage'));
 const UnifiedCalendarPage = lazy(() => import('./components/UnifiedCalendarPage'));
 const SupportPage = lazy(() => import('./components/SupportPage'));
 const HelpPage = lazy(() => import('./components/HelpPage'));
+
 
 export const UserContext = createContext(null);
 
@@ -241,6 +244,18 @@ function App() {
 
                                     <Route path="/" element={<Navigate to="/dashboard" replace/>}/>
                                     <Route path="*" element={<NotFoundPage/>}/>
+
+                                    <Route
+                                        path="/performance"
+                                        element={
+                                            <PrivateRoute>
+                                                <MainLayout>
+                                                    <PersonnelPerformancePage/>
+                                                </MainLayout>
+                                            </PrivateRoute>
+                                        }
+                                    />
+
                                 </Routes>
                             </Suspense>
                         </div>

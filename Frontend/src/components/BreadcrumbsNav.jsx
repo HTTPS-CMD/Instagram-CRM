@@ -1,8 +1,8 @@
 // src/components/BreadcrumbsNav.jsx
 import React from 'react';
-import { Breadcrumbs, Link, Typography, Box } from '@mui/material';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { NavigateNext as NavigateNextIcon, Home as HomeIcon } from '@mui/icons-material';
+import {Box, Breadcrumbs, Link, Typography} from '@mui/material';
+import {useLocation, useNavigate} from 'react-router-dom';
+import {Home as HomeIcon, NavigateNext as NavigateNextIcon} from '@mui/icons-material';
 
 // 1. نقشه ترجمه مسیرها (هر مسیر جدیدی ساختی اینجا اسم فارسیش رو اضافه کن)
 const routeNameMap = {
@@ -43,9 +43,9 @@ const BreadcrumbsNav = () => {
     }
 
     return (
-        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
+        <Box sx={{mb: 3, display: 'flex', alignItems: 'center'}}>
             <Breadcrumbs
-                separator={<NavigateNextIcon fontSize="small" sx={{color: 'text.secondary', opacity: 0.5}} />}
+                separator={<NavigateNextIcon fontSize="small" sx={{color: 'text.secondary', opacity: 0.5}}/>}
                 aria-label="breadcrumb"
             >
                 {/* 2. لینک خانه (داشبورد) همیشه اول هست */}
@@ -53,9 +53,15 @@ const BreadcrumbsNav = () => {
                     underline="hover"
                     color="inherit"
                     onClick={() => navigate('/dashboard')}
-                    sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'text.secondary' }}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        color: 'text.secondary'
+                    }}
                 >
-                    <HomeIcon sx={{ mr: 0.5, fontSize: 18 }} />
+                    <HomeIcon sx={{mr: 0.5, fontSize: 18}}/>
                     خانه
                 </Link>
 
@@ -88,7 +94,7 @@ const BreadcrumbsNav = () => {
                             underline="hover"
                             color="inherit"
                             onClick={() => navigate(to)}
-                            sx={{ cursor: 'pointer', fontSize: '0.85rem', fontFamily: 'Peyda', color: 'text.secondary' }}
+                            sx={{cursor: 'pointer', fontSize: '0.85rem', fontFamily: 'Peyda', color: 'text.secondary'}}
                         >
                             {displayName}
                         </Link>

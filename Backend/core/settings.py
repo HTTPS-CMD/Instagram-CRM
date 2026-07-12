@@ -61,8 +61,7 @@ MIDDLEWARE = [
     # 'rest_framework_simplejwt',
 ]
 
-CORS_ALLOWED_ORIGINS = [ True,
-
+CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # این برای create-react-app بود
     "http://127.0.0.1:3000",
     "http://localhost:5173",  # <-- این خط را برای Vite اضافه کنید

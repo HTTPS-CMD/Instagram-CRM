@@ -2,6 +2,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from users.serializers import UserSerializer
 from .models import *
 
 User = get_user_model()
@@ -167,18 +168,33 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
 # 4. Task Serializer
 # ---------------------------------------------------------------------------
 class TaskSerializer(serializers.ModelSerializer):
-    assigned_to_details = UserMiniSerializer(source='assigned_to', read_only=True)
+    # این فیلد را برای نمایش جزئیات کاربر اضافه می‌کنیم
+    assigned_to_details = UserSerializer(source='assigned_to', read_only=True)
+
+    # فیلد محاسباتی امتیاز نهایی
+    final_score = serializers.ReadOnlyField()
+
+    # نام پروژه را هم می‌گیریم که در فرانت راحت باشیم
     project_name = serializers.CharField(source='project.project_name', read_only=True)
 
     class Meta:
         model = Task
         fields = [
-            'id', 'title', 'description', 'project', 'project_name',
-            'status', 'priority', 'due_date',
-            'assigned_to', 'assigned_to_details',
-            'created_at'
+            'id',
+            'project',
+            'project_name',
+            'title',
+            # 'description',  <-- ❌ این خط را حتما پاک کنید (چون در مدل نیست)
+            'priority',  # ✅ این در مدل هست
+            'status',
+            'assigned_to',
+            'assigned_to_details',  # ✅ این فیلد سفارشی است و باید باشد
+            'kpi_points',
+            'difficulty_level',
+            'is_extra_mile',
+            'final_score',
+            'completed_at',  # ✅ بجای due_date از این استفاده کنید
         ]
-        read_only_fields = ['created_at']
 
 
 # ---------------------------------------------------------------------------
@@ -225,6 +241,7 @@ class GlobalCalendarEventSerializer(serializers.ModelSerializer):
 
 class WeeklyReportSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(source='project.project_name', read_only=True)
+
     class Meta: model = WeeklyReport; fields = '__all__'; read_only_fields = ['project']
 
 
@@ -238,6 +255,7 @@ class ProjectPaymentSerializer(serializers.ModelSerializer):
 
 class ProjectExpenseSerializer(serializers.ModelSerializer):
     class Meta: model = ProjectExpense; fields = '__all__'; read_only_fields = ['project', 'created_at']
+
     project_name = serializers.CharField(source='project.project_name', read_only=True)
 
 
@@ -337,3 +355,12 @@ class LeadSerializer(serializers.ModelSerializer):
     target_audience_name = serializers.CharField(source='target_audience.title', read_only=True)
 
     class Meta: model = Lead; fields = '__all__'
+
+
+class PersonnelLogSerializer(serializers.ModelSerializer):
+    recorder_name = serializers.ReadOnlyField(source='recorded_by.full_name')
+    username = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = PersonnelLog
+        fields = '__all__'  # یا لیست دقیق فیلدها
