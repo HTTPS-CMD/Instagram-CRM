@@ -50,7 +50,7 @@ If you want to run the project on your local machine for active development:
 **2. Production Deployment (Dockerized)**
 The production environment is pre-configured for security and performance.
 
-    git clone https://github.com/your-username/Instagram-CRM.git
+    git clone https://github.com/HTTPS-CMD/Instagram-CRM.git
     cd Instagram-CRM
     # Edit .env with your production variables and secret keys
     docker-compose up -d --build
@@ -97,7 +97,7 @@ The production environment is pre-configured for security and performance.
 **۲. استقرار روی سرور (Production)**
 سیستم برای اجرای امن و سریع روی سرورهای واقعی تنظیم شده است:
 
-    git clone https://github.com/your-username/Instagram-CRM.git
+    git clone https://github.com/HTTPS-CMD/Instagram-CRM.git
     cd Instagram-CRM
     # متغیرهای محیطی خود را در فایل env. تنظیم کنید
     docker-compose up -d --build
