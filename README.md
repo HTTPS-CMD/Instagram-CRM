@@ -1,97 +1,103 @@
 # 📱 Instagram CRM (Customer Relationship Management)
-> A comprehensive, containerized CRM solution for Instagram-based businesses.
+
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg?logo=python&logoColor=white)](#)
+[![Django](https://img.shields.io/badge/Django-5.0+-092E20.svg?logo=django&logoColor=white)](#)
+[![React](https://img.shields.io/badge/React-18+-61DAFB.svg?logo=react&logoColor=black)](#)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED.svg?logo=docker&logoColor=white)](#)
+
+> A highly scalable, containerized Customer Relationship Management system engineered specifically for Instagram-based commerce. 
 > 
-> **👨‍💻 Developer / توسعه‌دهنده:** Mehrshad Biriya (مهرشاد بیریا)
+> **👨‍💻 Lead Developer / توسعه‌دهنده:** Mehrshad Biriya
 
 ---
+
 ## 🇬🇧 English Documentation
 
-### 🎯 Who is this for?
-This project is specifically designed for **Instagram Business Owners, Online Shops, and Social Media Agencies**. Managing hundreds of direct messages, tracking orders, and coordinating tasks among team members (admins, sales, support) can be chaotic. 
-This CRM solves that by providing a centralized dashboard to track customer interactions, manage personnel roles, assign tasks, and monitor sales pipelines effectively.
+### 🎯 Overview & Problem Statement
+Managing a high volume of customer interactions on Instagram often leads to dropped leads, disorganized task delegation, and lost sales. This project solves these bottlenecks by providing a centralized, API-driven dashboard. It bridges the gap between social media interactions and professional workflow management, allowing teams to track leads, assign personnel tasks, and manage pipelines securely.
 
-### 🏗️ Architecture & How It Works
-The project uses a **Decoupled (Headless) Architecture**:
-* **Frontend (React + Vite):** A Single Page Application (SPA) that provides a blazing-fast, interactive user interface. It communicates with the backend solely via RESTful API calls.
-* **Backend (Django + DRF):** The brain of the system. It handles business logic, database queries (SQLite/PostgreSQL), and role-based access control.
-* **Authentication:** Stateless authentication using **JSON Web Tokens (JWT)**.
-* **Deployment (Docker + Nginx):** Both frontend and backend are fully containerized. Nginx acts as a reverse proxy, routing traffic to the correct containers and serving static files.
+### 🧠 System Architecture
+This application is built on a strict **Decoupled (Headless) Architecture**, ensuring high availability and separation of concerns:
 
-### 🛠️ Tech Stack
-* **Frontend:** React.js, Vite, Material-UI (MUI), Axios, FullCalendar
-* **Backend:** Python 3, Django 5, Django REST Framework, SimpleJWT
-* **DevOps:** Docker, Docker Compose, Nginx, Linux (Optimized for restricted/Iran-Access networks)
+* **Frontend (SPA):** Built with **React** and bundled using **Vite** for blazing-fast performance. It communicates with the backend solely via secure RESTful API calls.
+* **Backend (REST API):** Powered by **Python & Django REST Framework (DRF)**. It handles complex business logic, data serialization, and Role-Based Access Control (RBAC) distinguishing between Admins, Personnel, and Clients.
+* **Database Agnostic:** Configured to run seamlessly with local databases like **SQLite** for rapid prototyping, with the architectural readiness to scale horizontally using cloud database services like **Supabase** or PostgreSQL.
+* **Infrastructure:** 100% Dockerized. We utilize **Nginx Proxy Manager** to route traffic securely, serve static assets, and handle edge networks/CDNs.
 
-### 🚀 How to Run Locally (Development)
-If you want to run the project on your local machine for development:
+### 🛠️ Detailed Tech Stack
+* **Frontend:** React.js, Vite, Material-UI (MUI) & Pigment CSS, Axios, FullCalendar, React Router
+* **Backend:** Python 3, Django 5, Django REST Framework, SimpleJWT (Stateless Authentication)
+* **DevOps:** Docker, Docker Compose, Nginx (Optimized with custom registries for restricted/Iran-Access networks)
 
-1. **Backend:**
-        cd backend
-        python -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
-        python manage.py migrate
-        python manage.py runserver
+### 🚀 Getting Started
 
-2. **Frontend:**
-        cd frontend
-        npm install
-        npm run dev
+**1. Local Development (Without Docker)**
+If you want to run the project on your local machine for active development:
 
-### 🌍 How to Run on a Server (Production)
-The project is completely Dockerized for seamless production deployment.
+    # Backend Setup
+    cd backend
+    python -m venv venv
+    source venv/bin/activate  # On Windows use: venv\Scripts\activate
+    pip install -r requirements.txt
+    python manage.py migrate
+    python manage.py runserver
 
-1. Clone the repository on your server.
-2. Create your `.env` files based on `.env.example`.
-3. Run the following command:
-        docker-compose up -d --build
+    # Frontend Setup (in a new terminal)
+    cd frontend
+    npm install
+    npm run dev
 
-*Note: The Dockerfiles are optimized to bypass network restrictions (using alternative registries like Liara/Abrha for npm) ensuring smooth builds on any server.*
+**2. Production Deployment (Dockerized)**
+The production environment is pre-configured for security and performance.
 
+    git clone https://github.com/your-username/Instagram-CRM.git
+    cd Instagram-CRM
+    # Edit .env with your production variables and secret keys
+    docker-compose up -d --build
+
+---
 ---
 
 ## 🇮🇷 مستندات فارسی
 
-### 🎯 این پروژه برای چه کسانی است؟
-این سیستم به طور خاص برای **صاحبان کسب‌وکارهای اینستاگرامی، آنلاین‌شاپ‌ها و آژانس‌های دیجیتال مارکتینگ** طراحی شده است. مدیریت صدها دایرکت، پیگیری سفارشات و هماهنگی بین اعضای تیم (مدیران، فروشندگان، پشتیبانی) معمولاً بسیار پیچیده است.
+### 🎯 چشم‌انداز و هدف پروژه
+مدیریت حجم بالای پیام‌ها و سفارشات در کسب‌وکارهای اینستاگرامی معمولاً باعث سردرگمی تیم پشتیبانی، فراموشی وظایف و از دست رفتن مشتریان می‌شود. این سیستم CRM یک راه‌حل جامع و متمرکز است که به مدیران اجازه می‌دهد تعاملات مشتریان را رهگیری کنند، وظایف را به پرسنل ارجاع دهند و قیف فروش را به صورت حرفه‌ای مدیریت کنند.
 
-این CRM با ارائه یک داشبورد جامع برای رهگیری تعاملات مشتریان، مدیریت سطح دسترسی پرسنل، ارجاع وظایف و بررسی قیف فروش، این نیازها را به طور کامل برطرف می‌کند.
+### 🧠 معماری و مهندسی سیستم
+این سیستم با تکیه بر اصول **معماری تفکیک‌شده (Decoupled)** طراحی شده است:
 
-### 🏗️ معماری سیستم و نحوه کارکرد
-این پروژه بر اساس **معماری تفکیک‌شده (Decoupled)** توسعه یافته است:
-
-* **فرانت‌اند (React + Vite):** یک اپلیکیشن تک‌صفحه‌ای (SPA) که رابط کاربری بسیار سریع و تعاملی را فراهم می‌کند. ارتباط این بخش با بک‌اند صرفاً از طریق فراخوانی APIها انجام می‌شود.
-* **بک‌اند (Django + DRF):** هسته مرکزی سیستم که منطق تجاری، مدیریت دیتابیس و کنترل دسترسی‌های نقش‌محور (Role-based) را بر عهده دارد.
-* **احراز هویت:** استفاده از توکن‌های امن و بدون حالت **JWT**.
-* **زیرساخت و دیپلوی (Docker + Nginx):** تمام بخش‌های پروژه کانتینرایز شده‌اند. انجینکس (Nginx) به عنوان Reverse Proxy عمل کرده و ترافیک را مدیریت می‌کند.
+* **کلاینت (فرانت‌اند):** توسعه‌یافته با **React** و موتور قدرتمند **Vite**. این بخش به صورت یک اپلیکیشن تک‌صفحه‌ای (SPA) عمل کرده و رابط کاربری بسیار روانی را ارائه می‌دهد.
+* **هسته مرکزی (بک‌اند):** پیاده‌سازی شده با **Python** و **Django REST Framework**. این بخش وظیفه مدیریت منطق تجاری و کنترل سطوح دسترسی (ادمین، پرسنل، مشتری) را بر عهده دارد.
+* **انعطاف‌پذیری دیتابیس:** مهندسی شده برای توسعه سریع با **SQLite** و اتصال بی‌دردسر به سرویس‌های ابری قدرتمند مانند **Supabase** یا PostgreSQL در محیط پروداکشن.
+* **زیرساخت ابری:** تمام اجزای سیستم کانتینرایز شده (Docker) هستند. ترافیک ورودی توسط **Nginx** مدیریت شده و با شبکه‌های توزیع محتوا (CDN) کاملاً سازگار است.
 
 ### 🛠️ تکنولوژی‌های استفاده شده
-* **فرانت‌اند:** React.js, Vite, Material-UI (MUI), Axios, FullCalendar
-* **بک‌اند:** Python 3, Django 5, Django REST Framework, SimpleJWT
+* **فرانت‌اند:** React.js, Vite, Material-UI (MUI), Pigment CSS, Axios, FullCalendar
+* **بک‌اند:** Python 3, Django 5, Django REST Framework, SimpleJWT (برای احراز هویت)
 * **دواپس و زیرساخت:** Docker, Docker Compose, Nginx (بهینه‌شده برای سرورهای ایران‌اکسس و دور زدن تحریم‌ها با میرورهای جایگزین)
 
-### 🚀 نحوه اجرا روی سیستم شخصی (توسعه)
-برای اجرای پروژه روی لپ‌تاپ جهت توسعه و تغییرات:
+### 🚀 راهنمای اجرا و استقرار
 
-۱. **بک‌اند:**
-        cd backend
-        python -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
-        python manage.py migrate
-        python manage.py runserver
+**۱. اجرای محلی (توسعه روی سیستم شخصی)**
+برای توسعه و تغییرات در کدها روی لپ‌تاپ:
 
-۲. **فرانت‌اند:**
-        cd frontend
-        npm install
-        npm run dev
+    # راه‌اندازی بک‌اند
+    cd backend
+    python -m venv venv
+    source venv/bin/activate  # در ویندوز: venv\Scripts\activate
+    pip install -r requirements.txt
+    python manage.py migrate
+    python manage.py runserver
 
-### 🌍 نحوه اجرا روی سرور (پروداکشن)
-این پروژه برای اجرای سریع و بدون دردسر روی سرورهای واقعی داکرایز شده است:
+    # راه‌اندازی فرانت‌اند (در یک ترمینال جدید)
+    cd frontend
+    npm install
+    npm run dev
 
-۱. پروژه را روی سرور Clone کنید.
-۲. متغیرهای محیطی (`.env`) خود را تنظیم کنید.
-۳. دستور زیر را اجرا کنید:
-        docker-compose up -d --build
+**۲. استقرار روی سرور (Production)**
+سیستم برای اجرای امن و سریع روی سرورهای واقعی تنظیم شده است:
 
-*(نکته: فایل‌های Dockerfile به گونه‌ای تنظیم شده‌اند که مشکلات تحریم و اینترنت داخلی - ایران‌اکسس - را با استفاده از رجیستری‌های جایگزین برای npm دور بزنند و بیلد با موفقیت انجام شود).*
+    git clone https://github.com/your-username/Instagram-CRM.git
+    cd Instagram-CRM
+    # متغیرهای محیطی خود را در فایل env. تنظیم کنید
+    docker-compose up -d --build
